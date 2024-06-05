@@ -21,4 +21,4 @@ for name in instance_names:
 
 app = Starlette(debug=True, routes=routes)
 
-uvicorn.run(app)
+uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -7,4 +7,5 @@
 
 ### Resources
 
+* [starlette](https://www.starlette.io/)
 * [uvicorn](https://www.uvicorn.org/)

@@ -4,3 +4,7 @@
 ## running
 
 `python .`
+
+### Resources
+
+* [uvicorn](https://www.uvicorn.org/)

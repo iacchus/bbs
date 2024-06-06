@@ -15,23 +15,11 @@ instance_names = ["one"]
 
 routes = list()
 
-#  # if there's only one site, let's put in it root (dev mode/mono mode)
-#  if len(instance_names) == 1:
-#      name = instance_names[0]
-#      bbs_application = BBS(instance=name)
-#      mount_point = Mount(f"/", bbs_application.api)
-#      routes.append(mount_point)
-#  # if there are multiple sites, let's put in it root (multisite/multi mode)
-#  else:
-#      for name in instance_names:
-#          bbs_application = BBS(instance=name)
-#          mount_point = Mount(f"/{name}", bbs_application.api)
-#          routes.append(mount_point)
-
 for name in instance_names:
     bbs_application = BBS(instance=name)
     # if there's only one site, let's put in it root (dev mode/mono mode)
-    # if there are multiple sites, let's put in it root (multisite/multi mode)
+    # if there are multiple sites, let's put them in "/uri” (multisite/multi
+    #   mode)
     path = f"/{name}" if len(instance_names) > 1 else "/"
     mount_point = Mount(path, bbs_application.api)
     routes.append(mount_point)

@@ -1,12 +1,15 @@
-from fastapi import FastAPI
+from litestar import Litestar
+from litestar import get
 
 class BBS:
 
-    def __init__(self, instance):
-        self.api = FastAPI()
+    def __init__(self, instance: str):
 
         self.instance = instance
 
-        @self.api.get("/")
-        def read_root():
+        @get("/")
+        async def read_root() -> dict[str, str]:
             return {"instance": f"{self.instance}"}
+
+        self.api = Litestar([read_root])
+

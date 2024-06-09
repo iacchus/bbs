@@ -26,6 +26,7 @@ python install -e .  # install editable
 
 * [litestar](https://litestar.dev/)
 * [fastapi](https://fastapi.tiangolo.com/)
+* [httpie](https://httpie.io/docs/cli/main-features)
 * [piccolo](https://piccolo-orm.readthedocs.io/en/latest/)
 * [sqlmodel](https://sqlmodel.tiangolo.com/)
 * [starlette](https://www.starlette.io/)

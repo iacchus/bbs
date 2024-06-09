@@ -6,8 +6,9 @@ build-backend = "hatchling.build"
 name = "bbs"
 version = "0.0.1"
 dependencies = [
-  "fastapi",
+  # "fastapi",
   "litestar",
+  "sqlmodel",
   "starlette",
   "toml",
 ]

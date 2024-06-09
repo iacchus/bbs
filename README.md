@@ -8,11 +8,19 @@
 
 ## dev requirements
 
-1. create virtualenv: `user@[repo root]$ python -m venv .venv`
-2. enable virtualenv: `user@[repo root]$ source .venv/bin/activate`
-2. install `direnv`
-3. allow direnv: `user@[repo root]$ direnv allow`
-4. install editable: `user@[repo root]$ python -m venv .venv`
+1. install `direnv`
+
+2. use the commands:
+
+```
+git clone git@github.com:iacchus/bbs.git  # clone repo
+python -m venv .venv  # install virtualenv
+source .venv/bin/activate  # activate virtualenv
+direnv allow  # allow .envrc
+python install -e .  # install editable
+```
+
+3. run as above
 
 ### Resources
 

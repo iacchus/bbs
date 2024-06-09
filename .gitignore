@@ -1,3 +1,7 @@
+*.db
+*.sqlite
+*.sqlite3
+
 .idea/
 
 # Byte-compiled / optimized

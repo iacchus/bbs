@@ -24,7 +24,7 @@ class BBS:
         sqlite_url: str = SQLITE_URL.format(sqlite_file_name=sqlite_file_name)
         self.sqlite_url: str = sqlite_url
 
-        engine = create_engine(url=SQLITE_URL, echo=True)
+        engine = create_engine(url=sqlite_url, echo=True)
         self.engine = engine
 
         SQLModel.metadata.create_all(engine)

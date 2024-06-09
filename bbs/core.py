@@ -9,9 +9,9 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select, table
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
-@get("/")
-async def read_root() -> dict[str, str]:
-    return {"instance": 'oi'}
+#  @get("/")
+#  async def read_root() -> dict[str, str]:
+#      return {"instance": 'oi'}
 
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -34,9 +34,9 @@ class BBS:
 
         SQLModel.metadata.create_all(engine)
 
-        #  @get("/")
-        #  async def read_root() -> dict[str, str]:
-        #      return {"instance": self.instance}
+        @get("/")
+        async def read_root() -> dict[str, str]:
+            return {"instance": self.instance}
 
         @post("/")
         async def post_root(data: dict[str, str]) -> dict[str, str]:

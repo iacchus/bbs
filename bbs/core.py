@@ -15,6 +15,10 @@ async def read_root(site_uri: str) -> dict[str, str]:
     return {"instance": site_uri}
     #  return {"instance": 'oi'}
 
+@post("/")
+async def post_root(data: dict[str, str]) -> dict[str, str]:
+    return data
+
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
@@ -40,9 +44,9 @@ class BBS:
         #  async def read_root() -> dict[str, str]:
         #      return {"instance": self.instance}
 
-        @post("/")
-        async def post_root(data: dict[str, str]) -> dict[str, str]:
-            return data
+        #  @post("/")
+        #  async def post_root(data: dict[str, str]) -> dict[str, str]:
+        #      return data
 
         self.api = Litestar([read_root, post_root],
                             dependencies={'site_uri': Provide(self.get_uri)})

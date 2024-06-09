@@ -31,7 +31,8 @@ class BBS:
 
         @get("/")
         async def read_root() -> dict[str, str]:
-            return {"instance": f"{self.instance}"}
+            return {"instance": self.instance}
+            #  return {"instance": f"{self.instance}"}
 
         self.api = Litestar([read_root])
 

@@ -13,7 +13,6 @@ SQLITE_URL = "sqlite:///{sqlite_file_name}"
 @get("/")
 async def read_root(site_uri: str) -> dict[str, str]:
     return {"instance": site_uri}
-    #  return {"instance": 'oi'}
 
 @post("/")
 async def post_root(data: dict[str, str]) -> dict[str, str]:
@@ -40,17 +39,16 @@ class BBS:
 
         SQLModel.metadata.create_all(engine)
 
-        #  @get("/")
-        #  async def read_root() -> dict[str, str]:
-        #      return {"instance": self.instance}
+        dependencies: dict[str, Provide] = {
+            'site_uri': Provide(self.get_uri),
+            'db_engine': Provide(self.get_db_engine)
+        }
 
-        #  @post("/")
-        #  async def post_root(data: dict[str, str]) -> dict[str, str]:
-        #      return data
-
-        self.api = Litestar([read_root, post_root],
-                            dependencies={'site_uri': Provide(self.get_uri)})
+        self.api = Litestar(route_handlers=[read_root, post_root],
+                                      dependencies=dependencies)
 
     async def get_uri(self) -> str:
         return self.instance
 
+    async def get_db_engine(self):
+        return self.engine

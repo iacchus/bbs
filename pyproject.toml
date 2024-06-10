@@ -6,8 +6,10 @@ build-backend = "hatchling.build"
 name = "bbs"
 version = "0.0.1"
 dependencies = [
+  "click",
   # "fastapi",
   "litestar",
+  "pydantic",
   "sqlmodel",
   "starlette",
   "toml",
@@ -43,7 +45,10 @@ classifiers = [
 # "Bug Tracker" = "https://github.com/me/spam/issues"
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
-# [project.scripts]
+[project.scripts]
+bbs-cli = "bbs:cli"
+# bbs-cli = "bbs.__main__:cli"
+# bbs-cli = "bbs:run_uvicorn"
 # spam-cli = "spam:main_cli"
 
 # [project.gui-scripts]

@@ -24,9 +24,11 @@ python install -e .  # install editable
 
 ### Resources
 
+* [click](https://click.palletsprojects.com/en/8.1.x/)
 * [litestar](https://litestar.dev/)
 * [fastapi](https://fastapi.tiangolo.com/)
 * [httpie](https://httpie.io/docs/cli/main-features)
+* [notebooks](https://github.com/iacchus/jupyter-notebooks/)
 * [piccolo](https://piccolo-orm.readthedocs.io/en/latest/)
 * [sqlmodel](https://sqlmodel.tiangolo.com/)
 * [starlette](https://www.starlette.io/)

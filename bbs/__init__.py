@@ -3,6 +3,7 @@
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
+import uvicorn
 #  import toml
 
 from .core import BBS
@@ -22,3 +23,6 @@ for name in instance_names:
     routes.append(mount_point)
 
 app = Starlette(debug=True, routes=routes)
+
+def run_uvicorn():
+    uvicorn.run("bbs:app", host="0.0.0.0", port=8000, reload=True)

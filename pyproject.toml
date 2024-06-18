@@ -13,6 +13,7 @@ dependencies = [
   "sqlmodel",
   "starlette",
   "toml",
+  "uvicorn",
 ]
 requires-python = ">=3.8"
 authors = [

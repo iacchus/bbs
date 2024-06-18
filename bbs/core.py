@@ -1,6 +1,7 @@
 from typing import Optional
 
 from litestar import Litestar
+from litestar import Controller
 from litestar import get
 from litestar import post
 from litestar.di import Provide
@@ -10,17 +11,21 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select, table
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
-@get("/")
-async def read_root(site_uri: str) -> dict[str, str]:
-    return {"instance": site_uri}
-
-@post("/")
-async def post_root(data: dict[str, str]) -> dict[str, str]:
-    return data
-
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
+
+class BoardController(Controller):
+    path = "/board"
+
+    @get("/")
+    #  async def read_root(self, site_uri: str) -> dict[str, str]:
+    async def get_posts(self, site_uri: str) -> dict[str, str]:
+        return {"instance": site_uri}
+
+    @post("/")
+    async def post(self, data: dict[str, str]) -> dict[str, str]:
+        return data
 
 class BBS:
 
@@ -44,8 +49,10 @@ class BBS:
             'db_engine': Provide(self.get_db_engine)
         }
 
-        self.api = Litestar(route_handlers=[read_root, post_root],
+        self.api = Litestar(route_handlers=[BoardController],
                                       dependencies=dependencies)
+        #  self.api = Litestar(route_handlers=[read_root, post_root],
+        #                                dependencies=dependencies)
 
     async def get_uri(self) -> str:
         return self.instance

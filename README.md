@@ -4,7 +4,15 @@
 
 ## running
 
-`python -m bbs`
+```
+bbs-cli run
+```
+
+or
+
+```
+python -m bbs run
+```
 
 ## dev requirements
 

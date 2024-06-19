@@ -57,3 +57,7 @@ bbs-cli = "bbs:cli"
 
 # [project.entry-points."spam.magical"]
 # tomatoes = "spam:main_tomatoes"
+
+[tool.pyright]
+# reportIncompatibleVariableOverride = "information"
+reportIncompatibleVariableOverride = "none"

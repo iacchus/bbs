@@ -34,13 +34,13 @@ class Post(SQLModel, table=True):
     #  board: Board = Relationship(back_populates="posts")
 
 
-class PostDTO(PydanticDTO[Post]):
+class PostReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
 
-#  post_receive_config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
-#  PostDTO = PydanticDTO[Annotated[Post, post_receive_config]]
+class PostSendDTO(PydanticDTO[Post]):
+    #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
+    config: DTOConfig = DTOConfig()
 
-ReadPostDTO = PydanticDTO[Post]
 
 class BoardController(Controller):
     path = "/board"
@@ -54,8 +54,7 @@ class BoardController(Controller):
 
         return results
 
-    #  @post("/", dto=PostDTO, return_dto=ReadPostDTO)
-    @post("/{board_id:int}", dto=PostDTO, return_dto=ReadPostDTO)
+    @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def post(self, board_id: int, data: Post, db_engine: Engine) -> Post:
 
         session = Session(bind=db_engine, expire_on_commit=False)

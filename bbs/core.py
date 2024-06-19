@@ -1,3 +1,4 @@
+from typing import Annotated
 from typing import Optional
 
 from litestar import Litestar
@@ -18,9 +19,13 @@ class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
 
+PostDTO = PydanticDTO[Post]
+config: DTOConfig = DTOConfig(exclude={"id"})
+ReadPostDTO = PydanticDTO[Annotated[Post, config]]
+
 #  PostDTO = PydanticDTO[Post]
-class PostDTO(PydanticDTO[Post]):
-    config: DTOConfig = DTOConfig(exclude={"id"})
+#  class PostDTO(PydanticDTO[Post]):
+#      config: DTOConfig = DTOConfig(exclude={"id"})
 
 class BoardController(Controller):
     path = "/board"
@@ -30,7 +35,7 @@ class BoardController(Controller):
     async def get_posts(self, site_uri: str) -> dict[str, str]:
         return {"instance": site_uri}
 
-    @post("/", dto=PostDTO, return_dto=PostDTO)
+    @post("/", dto=PostDTO, return_dto=ReadPostDTO)
     async def post(self, data: Post, db_engine: Engine) -> Post:
     #  async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
     #  async def post(self, data: dict[str, str], db_engine) -> dict[str, str]:

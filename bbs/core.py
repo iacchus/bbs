@@ -6,6 +6,7 @@ from litestar import get
 from litestar import post
 from litestar.di import Provide
 
+from sqlalchemy import engine, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, select, table
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
@@ -24,8 +25,19 @@ class BoardController(Controller):
         return {"instance": site_uri}
 
     @post("/")
-    async def post(self, data: dict[str, str]) -> dict[str, str]:
-        return data
+    async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
+    #  async def post(self, data: dict[str, str], db_engine) -> dict[str, str]:
+
+        session = Session(bind=db_engine)
+
+        new_post = Post(text=data['text'])
+
+        session.add(new_post)
+        session.commit()
+        session.close()
+
+        #  return data
+        return new_post
 
 class BBS:
 

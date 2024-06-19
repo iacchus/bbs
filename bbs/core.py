@@ -20,8 +20,9 @@ class Post(SQLModel, table=True):
     text: str
 
 PostDTO = PydanticDTO[Post]
-config: DTOConfig = DTOConfig(exclude={"id"})
-ReadPostDTO = PydanticDTO[Annotated[Post, config]]
+ReadPostDTO = PostDTO
+#  config: DTOConfig = DTOConfig(exclude={"id"})
+#  ReadPostDTO = PydanticDTO[Annotated[Post, config]]
 
 #  PostDTO = PydanticDTO[Post]
 #  class PostDTO(PydanticDTO[Post]):
@@ -40,14 +41,14 @@ class BoardController(Controller):
     #  async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
     #  async def post(self, data: dict[str, str], db_engine) -> dict[str, str]:
 
-        session = Session(bind=db_engine)
+        session = Session(bind=db_engine, expire_on_commit=False)
 
         #  new_post = Post(text=data['text'])
         new_post = data
 
         session.add(new_post)
         session.commit()
-        session.close()
+        #  session.close()
 
         #  return data
         return new_post
@@ -76,6 +77,7 @@ class BBS:
 
         self.api = Litestar(route_handlers=[BoardController],
                                       dependencies=dependencies)
+                                        #  pdb_on_exception=True)
         #  self.api = Litestar(route_handlers=[read_root, post_root],
         #                                dependencies=dependencies)
 

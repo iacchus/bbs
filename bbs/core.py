@@ -16,10 +16,6 @@ from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, sele
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
-#  class Board(SQLModel, table=True):
-#      id: Optional[int] = Field(default=None, primary_key=True)
-#      #  id: str = Field(default=None, primary_key=True)
-#      posts: list["Post"] = Relationship(back_populates="board")
 
 class Board(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -43,28 +39,31 @@ ReadPostDTO = PostDTO
 #  ReadPostDTO = PydanticDTO[Annotated[Post, config]]
 
 #  PostDTO = PydanticDTO[Post]
-#  class PostDTO(PydanticDTO[Post]):
-#      config: DTOConfig = DTOConfig(exclude={"id"})
+class PostDTO(PydanticDTO[Post]):
+    config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
 
 class BoardController(Controller):
     path = "/board"
 
     @get("/")
     async def get_posts(self, site_uri: str, db_engine: Engine) -> Sequence[Post]:
-    #  async def get_posts(self, site_uri: str, db_engine: Engine) -> dict[str, str]:
+
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(Post)
-        results = session.exec(statement=statement)
-        #  return {"instance": site_uri}
-        return results.all()
+        results = session.exec(statement=statement).all()
 
-    @post("/", dto=PostDTO, return_dto=ReadPostDTO)
-    async def post(self, data: Post, db_engine: Engine) -> Post:
+        return results
+
+    #  @post("/", dto=PostDTO, return_dto=ReadPostDTO)
+    @post("/{board_id:int}", dto=PostDTO, return_dto=ReadPostDTO)
+    async def post(self, board_id: int, data: Post, db_engine: Engine) -> Post:
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
-        #  new_post = Post(text=data['text'])
         new_post = data
+
+        # TODO: check if board exists
+        new_post.board_id = board_id
 
         session.add(new_post)
         session.commit()
@@ -75,12 +74,12 @@ class BoardController(Controller):
     @get("/{board_id:int}")
     async def get_board_posts(self, site_uri: str, board_id: int,
                         db_engine: Engine) -> Sequence[Post]:
-    #  async def get_posts(self, site_uri: str, db_engine: Engine) -> dict[str, str]:
+
         session = Session(bind=db_engine, expire_on_commit=False)
         #  statement = select(Post)
         statement = select(Post).where(Post.board_id == board_id)
         results = session.exec(statement=statement).all()
-        #  return {"instance": site_uri}
+
         return results
 
 class BBS:

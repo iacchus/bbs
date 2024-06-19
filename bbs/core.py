@@ -79,9 +79,9 @@ class BoardController(Controller):
         session = Session(bind=db_engine, expire_on_commit=False)
         #  statement = select(Post)
         statement = select(Post).where(Post.board_id == board_id)
-        results = session.exec(statement=statement)
+        results = session.exec(statement=statement).all()
         #  return {"instance": site_uri}
-        return results.all()
+        return results
 
 class BBS:
 

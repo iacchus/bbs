@@ -1,4 +1,5 @@
-from typing import Annotated, Sequence
+#  from typing import Annotated, Sequence
+from typing import Annotated
 from typing import Optional
 
 from litestar import Litestar
@@ -9,6 +10,7 @@ from litestar.di import Provide
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.dto import DTOConfig
 
+from pydantic.types import Sequence
 from sqlalchemy import engine, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, select, table
 
@@ -27,6 +29,11 @@ ReadPostDTO = PostDTO
 #  PostDTO = PydanticDTO[Post]
 #  class PostDTO(PydanticDTO[Post]):
 #      config: DTOConfig = DTOConfig(exclude={"id"})
+
+class Board(SQLModel, table=True):
+    #  id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(default=None, primary_key=True)
+    posts: Sequence[Post]
 
 class BoardController(Controller):
     path = "/board"

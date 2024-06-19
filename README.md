@@ -36,6 +36,7 @@ python install -e .  # install editable
 * [litestar](https://litestar.dev/)
 * [fastapi](https://fastapi.tiangolo.com/)
 * [httpie](https://httpie.io/docs/cli/main-features)
+* [jupyter notebooks](https://github.com/iacchus/jupyter-notebooks)
 * [notebooks](https://github.com/iacchus/jupyter-notebooks/)
 * [piccolo](https://piccolo-orm.readthedocs.io/en/latest/)
 * [pydantic](https://docs.pydantic.dev/latest/)

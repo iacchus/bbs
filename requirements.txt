@@ -1,6 +1,6 @@
 annotated-types==0.7.0
 anyio==4.4.0
--e git+ssh://git@github.com/iacchus/bbs.git@d7891daa8d7a7e890a7397d79e866f982b5b7174#egg=bbs
+-e git+ssh://git@github.com/iacchus/bbs.git@318529fc452a1f4022822d2b275f7e00f06cd40d#egg=bbs
 certifi==2024.6.2
 click==8.1.7
 dnspython==2.6.1

@@ -33,14 +33,14 @@ class Post(SQLModel, table=True):
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
 
-PostDTO = PydanticDTO[Post]
-ReadPostDTO = PostDTO
-#  config: DTOConfig = DTOConfig(exclude={"id"})
-#  ReadPostDTO = PydanticDTO[Annotated[Post, config]]
 
-#  PostDTO = PydanticDTO[Post]
 class PostDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
+
+#  post_receive_config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
+#  PostDTO = PydanticDTO[Annotated[Post, post_receive_config]]
+
+ReadPostDTO = PydanticDTO[Post]
 
 class BoardController(Controller):
     path = "/board"

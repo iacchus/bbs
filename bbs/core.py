@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Sequence
 from typing import Optional
 
 from litestar import Litestar
@@ -32,8 +32,13 @@ class BoardController(Controller):
     path = "/board"
 
     @get("/")
-    async def get_posts(self, site_uri: str) -> dict[str, str]:
-        return {"instance": site_uri}
+    async def get_posts(self, site_uri: str, db_engine: Engine) -> Sequence[Post]:
+    #  async def get_posts(self, site_uri: str, db_engine: Engine) -> dict[str, str]:
+        session = Session(bind=db_engine, expire_on_commit=False)
+        statement = select(Post)
+        results = session.exec(statement=statement)
+        #  return {"instance": site_uri}
+        return results.all()
 
     @post("/", dto=PostDTO, return_dto=ReadPostDTO)
     async def post(self, data: Post, db_engine: Engine) -> Post:

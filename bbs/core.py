@@ -5,6 +5,8 @@ from litestar import Controller
 from litestar import get
 from litestar import post
 from litestar.di import Provide
+from litestar.contrib.pydantic import PydanticDTO
+from litestar.dto import DTOConfig
 
 from sqlalchemy import engine, Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, select, table
@@ -16,6 +18,10 @@ class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str
 
+#  PostDTO = PydanticDTO[Post]
+class PostDTO(PydanticDTO[Post]):
+    config: DTOConfig = DTOConfig(exclude={"id"})
+
 class BoardController(Controller):
     path = "/board"
 
@@ -24,13 +30,15 @@ class BoardController(Controller):
     async def get_posts(self, site_uri: str) -> dict[str, str]:
         return {"instance": site_uri}
 
-    @post("/")
-    async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
+    @post("/", dto=PostDTO, return_dto=PostDTO)
+    async def post(self, data: Post, db_engine: Engine) -> Post:
+    #  async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
     #  async def post(self, data: dict[str, str], db_engine) -> dict[str, str]:
 
         session = Session(bind=db_engine)
 
-        new_post = Post(text=data['text'])
+        #  new_post = Post(text=data['text'])
+        new_post = data
 
         session.add(new_post)
         session.commit()

@@ -32,14 +32,11 @@ class BoardController(Controller):
     path = "/board"
 
     @get("/")
-    #  async def read_root(self, site_uri: str) -> dict[str, str]:
     async def get_posts(self, site_uri: str) -> dict[str, str]:
         return {"instance": site_uri}
 
     @post("/", dto=PostDTO, return_dto=ReadPostDTO)
     async def post(self, data: Post, db_engine: Engine) -> Post:
-    #  async def post(self, data: dict[str, str], db_engine: Engine) -> Post:
-    #  async def post(self, data: dict[str, str], db_engine) -> dict[str, str]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
@@ -48,9 +45,8 @@ class BoardController(Controller):
 
         session.add(new_post)
         session.commit()
-        #  session.close()
+        session.close()
 
-        #  return data
         return new_post
 
 class BBS:

@@ -45,6 +45,41 @@ class PostSendDTO(PydanticDTO[Post]):
     #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
     config: DTOConfig = DTOConfig()
 
+class SiteController(Controller):
+
+    path = "/"
+
+    @get("/")
+
+    async def get_boards(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
+    #  async def get_boards(self) -> Sequence[Board]:
+        session = Session(bind=db_engine, expire_on_commit=False)
+        statement = select(Board)
+        results = session.exec(statement=statement).all()
+
+        return results
+
+
+    #  @post("/{board_uri:str}")
+    #  async def create_board(self):
+    #  @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
+    #  async def create_board(self, board_uri: str, data: Board, db_engine: Engine) -> Post:
+    @post("/", dto=BoardReceiveDTO, return_dto=BoardSendDTO)
+    async def create_board(self, data: Board, db_engine: Engine) -> Board:
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        new_board = data
+
+        # TODO: check if board exists
+        #  new_board.uri = board_uri
+
+        session.add(new_board)
+        session.commit()
+        session.close()
+
+        return new_board
+
 
 class BoardController(Controller):
     path = "/board"
@@ -107,7 +142,10 @@ class BBS:
             'db_engine': Provide(self.get_db_engine)
         }
 
-        self.api = Litestar(route_handlers=[BoardController],
+        route_handlers: list = [BoardController,
+                                SiteController]
+
+        self.api = Litestar(route_handlers=route_handlers,
                                       dependencies=dependencies)
                                       #  dependencies=dependencies,
                                       #  pdb_on_exception=True)

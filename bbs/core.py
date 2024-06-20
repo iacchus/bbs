@@ -94,7 +94,7 @@ class BoardController(Controller):
         return results
 
     @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
-    async def post(self, board_id: int, data: Post, db_engine: Engine) -> Post:
+    async def post(self, board_id: int, data: Post, db_engine: Engine) -> Post | None:
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
@@ -103,11 +103,15 @@ class BoardController(Controller):
         # TODO: check if board exists
         new_post.board_id = board_id
 
-        session.add(new_post)
-        session.commit()
-        session.close()
+        statement = select(Board).where(Board.id == new_post.board_id)
+        board_exists: Board | None = session.exec(statement=statement).first()
 
-        return new_post
+        if board_exists:
+            session.add(new_post)
+            session.commit()
+            session.close()
+
+            return new_post
 
     @get("/{board_id:int}")
     async def get_board_posts(self, site_uri: str, board_id: int,

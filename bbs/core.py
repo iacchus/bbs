@@ -9,6 +9,7 @@ from litestar import post
 from litestar.di import Provide
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.dto import DTOConfig
+from litestar.exceptions import NotFoundException
 
 from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
@@ -94,7 +95,7 @@ class BoardController(Controller):
         return results
 
     @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
-    async def post(self, board_id: int, data: Post, db_engine: Engine) -> Post | None:
+    async def create_post(self, board_id: int, data: Post, db_engine: Engine) -> Post | None:
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
@@ -112,6 +113,9 @@ class BoardController(Controller):
             session.close()
 
             return new_post
+
+        else:
+            raise NotFoundException('Board id does not exist')
 
     @get("/{board_id:int}")
     async def get_board_posts(self, site_uri: str, board_id: int,

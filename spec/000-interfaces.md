@@ -15,4 +15,13 @@ interface data is sent from the server via JSON so the clients know how to mount
 {'interfaces': 'board'}
 ```
 
+## other interfaces
+
+maybe we can allow other `interfaces`:
+
+* **registration**
+  client automatically download ans saves authdata in a `.sqlite` or `.json` file
+* **login**
+* *etc*
+
 

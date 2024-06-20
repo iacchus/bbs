@@ -23,8 +23,12 @@ class Board(SQLModel, table=True):
     #  id: str = Field(default=None, primary_key=True)
     #  posts: list["Post"] = Relationship(back_populates="board")
 
-BoardDTO = PydanticDTO[Board]
-ReadBoardDTO = BoardDTO
+class BoardReceiveDTO(PydanticDTO[Board]):
+    config: DTOConfig = DTOConfig(exclude={"id"})
+
+class BoardSendDTO(PydanticDTO[Board]):
+    config: DTOConfig = DTOConfig()
+
 
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -107,8 +111,6 @@ class BBS:
                                       dependencies=dependencies)
                                       #  dependencies=dependencies,
                                       #  pdb_on_exception=True)
-        #  self.api = Litestar(route_handlers=[read_root, post_root],
-        #                                dependencies=dependencies)
 
     async def get_uri(self) -> str:
         return self.instance

@@ -1,5 +1,4 @@
 from typing import Annotated, Sequence
-#  from typing import Annotated
 from typing import Optional
 
 from litestar import Litestar
@@ -17,39 +16,9 @@ from sqlmodel.sql.expression import SelectOfScalar
 
 from .models import Post, PostReceiveDTO, PostSendDTO
 from .functions import board_id_exists
-#  from .functions import uid_exists
-
-#  from .board import board_id_exists
-#  from .board import board_id_exists
-#  from . import board_id_exists
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
-
-
-#  class Post(SQLModel, table=True):
-#      id: Optional[int] = Field(default=None, primary_key=True)
-#      board_id: int
-#      text: str
-#      reply_to_id: int
-#      #  board_id: int = Field(default=None, foreign_key="board.id")
-#      #  board: Board = Relationship(back_populates="posts")
-#
-#
-#  class PostReceiveDTO(PydanticDTO[Post]):
-#      config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
-#
-#  class PostSendDTO(PydanticDTO[Post]):
-#      #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
-#      config: DTOConfig = DTOConfig()
-#
-
-#  def post_id_exists(db_session, post_id: int) -> bool:
-#      post_exists: bool = uid_exists(db_session=db_session,
-#                                      model=Post,
-#                                      unique_id_field=Post.id,
-#                                      unique_id_value=post_id)
-#      return post_exists
 
 
 class PostController(Controller):

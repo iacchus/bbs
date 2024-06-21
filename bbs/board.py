@@ -1,5 +1,4 @@
 from typing import Annotated, Sequence
-#  from typing import Annotated
 from typing import Optional
 
 from litestar import Litestar
@@ -15,51 +14,13 @@ from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 from sqlmodel.sql.expression import SelectOfScalar
 
-#  from .post import Post
-from .post import Post
-from .post import PostReceiveDTO
-from .post import PostSendDTO
-#  from . import Post
-#  from . import PostReceiveDTO
-#  from . import PostSendDTO
-
 from .models import Board, BoardReceiveDTO, BoardSendDTO
+from .models import Post
+
 from .functions import uid_exists
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
-
-
-
-#  class Board(SQLModel, table=True):
-#      id: Optional[int] = Field(default=None, primary_key=True)
-#      uri: str
-#      #  id: str = Field(default=None, primary_key=True)
-#      #  posts: list["Post"] = Relationship(back_populates="board")
-#
-#
-#  class BoardReceiveDTO(PydanticDTO[Board]):
-#      config: DTOConfig = DTOConfig(exclude={"id"})
-#
-#
-#  class BoardSendDTO(PydanticDTO[Board]):
-#      config: DTOConfig = DTOConfig()
-
-
-#  def board_id_exists(db_session, board_id: int) -> bool:
-#      board_exists: bool = uid_exists(db_session=db_session,
-#                                      model=Board,
-#                                      unique_id_field=Board.id,
-#                                      unique_id_value=board_id)
-#      return board_exists
-#
-#
-#  def board_uri_exists(db_session, board_uri: int) -> bool:
-#      board_exists: bool = uid_exists(db_session=db_session,
-#                                      model=Board,
-#                                      unique_id_field=Board.uri,
-#                                      unique_id_value=board_uri)
-#      return board_exists
 
 
 class BoardController(Controller):

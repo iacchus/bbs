@@ -19,26 +19,9 @@ from .models import Board
 from .models import BoardReceiveDTO
 from .models import BoardSendDTO
 
-#  from .board import Board
-#  from .board import BoardReceiveDTO
-#  from .board import BoardSendDTO
-#  from . import Board
-#  from . import BoardReceiveDTO
-#  from . import BoardSendDTO
-
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
-
-#  class Site(SQLModel, table=True):
-#      id: Optional[int] = Field(default=None, primary_key=True)
-#      uri: str
-#
-#  class SiteSendDTO(PydanticDTO[Site]):
-#      config: DTOConfig = DTOConfig()
-#
-#  class SiteReceiveDTO(PydanticDTO[Site]):
-#      config: DTOConfig = DTOConfig(exclude={"id"})
 
 class SiteController(Controller):
 

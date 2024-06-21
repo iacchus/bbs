@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from .models import Board, BoardReceiveDTO, BoardSendDTO
 
+from .functions import board_uri_exists
 
 class SiteController(Controller):
 
@@ -33,9 +34,10 @@ class SiteController(Controller):
         # TODO: check if board exists
         #  new_board.uri = board_uri
 
-        session.add(new_board)
-        session.commit()
-        session.close()
+        if not board_uri_exists(session, new_board.uri):
+            session.add(new_board)
+            session.commit()
+            session.close()
 
         return new_board
 

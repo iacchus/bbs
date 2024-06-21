@@ -31,7 +31,6 @@ class BoardController(Controller):
                         db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
-        #  statement = select(Post)
         statement = select(Post).where(Post.board_id == board_id)
         results = session.exec(statement=statement).all()
 

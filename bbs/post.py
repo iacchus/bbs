@@ -15,7 +15,8 @@ from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 from sqlmodel.sql.expression import SelectOfScalar
 
-from .functions import board_id_exists
+#  from .functions import board_id_exists
+#  from . import board_id_exists
 
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
@@ -39,14 +40,14 @@ class PostSendDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig()
 
 
-def post_id_exists(db_session, post_id: int) -> bool:
-        statement: SelectOfScalar[Post] = \
-            select(Post).where(Post.id == post_id)
-
-        post_exists: Post | None = \
-            db_session.exec(statement=statement).first()
-
-        return bool(post_exists)
+#  def post_id_exists(db_session, post_id: int) -> bool:
+#          statement: SelectOfScalar[Post] = \
+#              select(Post).where(Post.id == post_id)
+#
+#          post_exists: Post | None = \
+#              db_session.exec(statement=statement).first()
+#
+        #  return bool(post_exists)
 
 
 class PostController(Controller):

@@ -16,7 +16,8 @@ from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, sele
 from sqlmodel.sql.expression import SelectOfScalar
 
 from .models import Post, PostReceiveDTO, PostSendDTO
-from .functions import uid_exists
+from .functions import board_id_exists
+#  from .functions import uid_exists
 
 #  from .board import board_id_exists
 #  from .board import board_id_exists
@@ -43,12 +44,12 @@ SQLITE_URL = "sqlite:///{sqlite_file_name}"
 #      config: DTOConfig = DTOConfig()
 #
 
-def post_id_exists(db_session, post_id: int) -> bool:
-    post_exists: bool = uid_exists(db_session=db_session,
-                                    model=Post,
-                                    unique_id_field=Post.id,
-                                    unique_id_value=post_id)
-    return post_exists
+#  def post_id_exists(db_session, post_id: int) -> bool:
+#      post_exists: bool = uid_exists(db_session=db_session,
+#                                      model=Post,
+#                                      unique_id_field=Post.id,
+#                                      unique_id_value=post_id)
+#      return post_exists
 
 
 class PostController(Controller):
@@ -56,6 +57,7 @@ class PostController(Controller):
 
     @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def create_post(self, data: Post, db_engine: Engine) -> Post | None:
+        """Creates a new post"""
 
         session = Session(bind=db_engine, expire_on_commit=False)
 

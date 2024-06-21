@@ -46,20 +46,20 @@ SQLITE_URL = "sqlite:///{sqlite_file_name}"
 #      config: DTOConfig = DTOConfig()
 
 
-def board_id_exists(db_session, board_id: int) -> bool:
-    board_exists: bool = uid_exists(db_session=db_session,
-                                    model=Board,
-                                    unique_id_field=Board.id,
-                                    unique_id_value=board_id)
-    return board_exists
-
-
-def board_uri_exists(db_session, board_uri: int) -> bool:
-    board_exists: bool = uid_exists(db_session=db_session,
-                                    model=Board,
-                                    unique_id_field=Board.uri,
-                                    unique_id_value=board_uri)
-    return board_exists
+#  def board_id_exists(db_session, board_id: int) -> bool:
+#      board_exists: bool = uid_exists(db_session=db_session,
+#                                      model=Board,
+#                                      unique_id_field=Board.id,
+#                                      unique_id_value=board_id)
+#      return board_exists
+#
+#
+#  def board_uri_exists(db_session, board_uri: int) -> bool:
+#      board_exists: bool = uid_exists(db_session=db_session,
+#                                      model=Board,
+#                                      unique_id_field=Board.uri,
+#                                      unique_id_value=board_uri)
+#      return board_exists
 
 
 class BoardController(Controller):

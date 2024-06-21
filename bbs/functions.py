@@ -1,5 +1,6 @@
 from sqlmodel import select
 
+from .models import Site
 from .models import Board
 from .models import Post
 

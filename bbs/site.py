@@ -15,12 +15,16 @@ from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 from sqlmodel.sql.expression import SelectOfScalar
 
+from .models import Board
+from .models import BoardReceiveDTO
+from .models import BoardSendDTO
+
 #  from .board import Board
 #  from .board import BoardReceiveDTO
 #  from .board import BoardSendDTO
-from . import Board
-from . import BoardReceiveDTO
-from . import BoardSendDTO
+#  from . import Board
+#  from . import BoardReceiveDTO
+#  from . import BoardSendDTO
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"

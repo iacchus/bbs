@@ -15,13 +15,25 @@ from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 from sqlmodel.sql.expression import SelectOfScalar
 
-from .board import Board
-from .board import BoardReceiveDTO
-from .board import BoardSendDTO
+#  from .board import Board
+#  from .board import BoardReceiveDTO
+#  from .board import BoardSendDTO
+from . import Board
+from . import BoardReceiveDTO
+from . import BoardSendDTO
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
+
+class Site(SQLModel, table=True):
+    pass
+
+class SiteSendDTO(PydanticDTO[Site]):
+    pass
+
+class SiteReceiveDTO(PydanticDTO[Site]):
+    pass
 
 class SiteController(Controller):
 
@@ -30,7 +42,6 @@ class SiteController(Controller):
     @get("/")
 
     async def get_boards(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
-    #  async def get_boards(self) -> Sequence[Board]:
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(Board)
         results = session.exec(statement=statement).all()

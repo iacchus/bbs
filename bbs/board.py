@@ -85,38 +85,3 @@ class BoardController(Controller):
 
         return results
 
-#  class BBS:
-#
-#      def __init__(self, instance: str):
-#
-#          self.instance: str = instance
-#
-#          sqlite_file_name: str = SQLITE_FILE_NAME.format(uri=instance)
-#          self.sqlite_file_name: str = sqlite_file_name
-#
-#          sqlite_url: str = SQLITE_URL.format(sqlite_file_name=sqlite_file_name)
-#          self.sqlite_url: str = sqlite_url
-#
-#          engine = create_engine(url=sqlite_url, echo=True)
-#          self.engine = engine
-#
-#          SQLModel.metadata.create_all(engine)
-#
-#          dependencies: dict[str, Provide] = {
-#              'site_uri': Provide(self.get_uri),
-#              'db_engine': Provide(self.get_db_engine)
-#          }
-#
-#          route_handlers: list = [BoardController,
-#                                  SiteController]
-#
-#          self.api = Litestar(route_handlers=route_handlers,
-#                                        dependencies=dependencies)
-#                                        #  dependencies=dependencies,
-#                                        #  pdb_on_exception=True)
-#
-#      async def get_uri(self) -> str:
-#          return self.instance
-#
-#      async def get_db_engine(self):
-#          return self.engine

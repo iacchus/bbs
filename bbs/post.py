@@ -17,9 +17,6 @@ from sqlmodel.sql.expression import SelectOfScalar
 from .models import Post, PostReceiveDTO, PostSendDTO
 from .functions import board_id_exists
 
-SQLITE_FILE_NAME = "db-{uri}.sqlite"
-SQLITE_URL = "sqlite:///{sqlite_file_name}"
-
 
 class PostController(Controller):
     path = "/post"

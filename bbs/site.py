@@ -19,9 +19,6 @@ from .models import Board
 from .models import BoardReceiveDTO
 from .models import BoardSendDTO
 
-SQLITE_FILE_NAME = "db-{uri}.sqlite"
-SQLITE_URL = "sqlite:///{sqlite_file_name}"
-
 
 class SiteController(Controller):
 

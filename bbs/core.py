@@ -15,9 +15,12 @@ from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 from sqlmodel.sql.expression import SelectOfScalar
 
-from .board import BoardController
-from .post import PostController
-from .site import SiteController
+#  from .board import BoardController
+#  from .post import PostController
+#  from .site import SiteController
+from . import BoardController
+from . import PostController
+from . import SiteController
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"

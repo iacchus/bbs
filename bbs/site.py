@@ -27,20 +27,20 @@ SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
 
 class Site(SQLModel, table=True):
-    pass
+    id: Optional[int] = Field(default=None, primary_key=True)
+    uri: str
 
 class SiteSendDTO(PydanticDTO[Site]):
-    pass
+    config: DTOConfig = DTOConfig()
 
 class SiteReceiveDTO(PydanticDTO[Site]):
-    pass
+    config: DTOConfig = DTOConfig(exclude={"id"})
 
 class SiteController(Controller):
 
     path = "/"
 
     @get("/")
-
     async def get_boards(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(Board)

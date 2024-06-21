@@ -38,6 +38,17 @@ class PostSendDTO(PydanticDTO[Post]):
     #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
     config: DTOConfig = DTOConfig()
 
+
+def post_id_exists(db_session, post_id: int) -> bool:
+        statement: SelectOfScalar[Post] = \
+            select(Post).where(Post.id == post_id)
+
+        post_exists: Post | None = \
+            db_session.exec(statement=statement).first()
+
+        return bool(post_exists)
+
+
 class PostController(Controller):
     path = "/post"
 

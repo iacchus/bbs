@@ -54,7 +54,7 @@ class Post(SQLModel, table=True):
 
 
 class PostReceiveDTO(PydanticDTO[Post]):
-    config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
+    config: DTOConfig = DTOConfig(exclude={"id"})
 
 
 class PostSendDTO(PydanticDTO[Post]):

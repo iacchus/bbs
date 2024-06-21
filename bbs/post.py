@@ -29,6 +29,6 @@ class PostController(Controller):
             return new_post
 
         else:
-            raise NotFoundException('Board id does not exist')
+            raise NotFoundException(f'Board id {new_post.board_id} does not exist')
 
 

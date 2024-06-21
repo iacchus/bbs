@@ -13,10 +13,29 @@ from litestar.exceptions import NotFoundException
 
 from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
+from sqlmodel.sql.expression import SelectOfScalar
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
+
+def board_id_exists(db_session, board_id: int) -> bool:
+        statement: SelectOfScalar[Board] = \
+            select(Board).where(Board.id == board_id)
+
+        board_exists: Board | None = \
+            db_session.exec(statement=statement).first()
+
+        return bool(board_exists)
+
+def post_id_exists(db_session, post_id: int) -> bool:
+        statement: SelectOfScalar[Post] = \
+            select(Post).where(Post.id == post_id)
+
+        post_exists: Post | None = \
+            db_session.exec(statement=statement).first()
+
+        return bool(post_exists)
 
 class Board(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -35,6 +54,7 @@ class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int
     text: str
+    reply_to_id: int
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
 
@@ -45,6 +65,30 @@ class PostReceiveDTO(PydanticDTO[Post]):
 class PostSendDTO(PydanticDTO[Post]):
     #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
     config: DTOConfig = DTOConfig()
+
+class PostController(Controller):
+    path = "/post"
+
+    @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
+    async def create_post(self, data: Post, db_engine: Engine) -> Post | None:
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        new_post: Post = data
+
+        #  statement: SelectOfScalar[Board] = select(Board).where(Board.id == new_post.board_id)
+        #  board_exists: Board | None = session.exec(statement=statement).first()
+
+        #  if board_exists:
+        if board_id_exists(db_session=session, board_id=new_post.board_id):
+            session.add(new_post)
+            session.commit()
+            session.close()
+
+            return new_post
+
+        else:
+            raise NotFoundException('Board id does not exist')
 
 class SiteController(Controller):
 
@@ -61,10 +105,6 @@ class SiteController(Controller):
         return results
 
 
-    #  @post("/{board_uri:str}")
-    #  async def create_board(self):
-    #  @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
-    #  async def create_board(self, board_uri: str, data: Board, db_engine: Engine) -> Post:
     @post("/", dto=BoardReceiveDTO, return_dto=BoardSendDTO)
     async def create_board(self, data: Board, db_engine: Engine) -> Board:
 
@@ -94,28 +134,27 @@ class BoardController(Controller):
 
         return results
 
-    @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
-    async def create_post(self, board_id: int, data: Post, db_engine: Engine) -> Post | None:
-
-        session = Session(bind=db_engine, expire_on_commit=False)
-
-        new_post = data
-
-        # TODO: check if board exists
-        new_post.board_id = board_id
-
-        statement = select(Board).where(Board.id == new_post.board_id)
-        board_exists: Board | None = session.exec(statement=statement).first()
-
-        if board_exists:
-            session.add(new_post)
-            session.commit()
-            session.close()
-
-            return new_post
-
-        else:
-            raise NotFoundException('Board id does not exist')
+    #  @post("/{board_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
+    #  @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
+    #  async def create_post(self, data: Post, db_engine: Engine) -> Post | None:
+    #      #  async def create_post(self, board_id: int, data: Post, db_engine: Engine) -> Post | None:
+    #
+    #      session = Session(bind=db_engine, expire_on_commit=False)
+    #
+    #      new_post: Post = data
+    #
+    #      statement: SelectOfScalar[Board] = select(Board).where(Board.id == new_post.board_id)
+    #      board_exists: Board | None = session.exec(statement=statement).first()
+    #
+    #      if board_exists:
+    #          session.add(new_post)
+    #          session.commit()
+    #          session.close()
+    #
+    #          return new_post
+    #
+    #      else:
+    #          raise NotFoundException('Board id does not exist')
 
     @get("/{board_id:int}")
     async def get_board_posts(self, site_uri: str, board_id: int,

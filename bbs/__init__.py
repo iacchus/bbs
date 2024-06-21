@@ -7,12 +7,12 @@ import uvicorn
 #  import toml
 
 from .post import Post, PostReceiveDTO, PostSendDTO, PostController
-from .board import Board, BoardReceiveDTO, BoardSendDTO, BoardController
+from .board import Board, BoardReceiveDTO, BoardSendDTO, BoardController, board_id_exists
 from .site import Site, SiteReceiveDTO, SiteSendDTO, SiteController
 
-from .functions import board_id_exists
-from .functions import board_uri_exists
-from .functions import post_id_exists
+#  from .functions import board_id_exists
+#  from .functions import board_uri_exists
+#  from .functions import post_id_exists
 
 from .core import BBS
 

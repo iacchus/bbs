@@ -16,49 +16,50 @@ from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, sele
 from sqlmodel.sql.expression import SelectOfScalar
 
 #  from .post import Post
-#  from .post import PostReceiveDTO
-#  from .post import PostSendDTO
-from . import Post
-from . import PostReceiveDTO
-from . import PostSendDTO
+from .post import Post
+from .post import PostReceiveDTO
+from .post import PostSendDTO
+#  from . import Post
+#  from . import PostReceiveDTO
+#  from . import PostSendDTO
 
+from .models import Board, BoardReceiveDTO, BoardSendDTO
+from .functions import uid_exists
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
 
 
-class Board(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    uri: str
-    #  id: str = Field(default=None, primary_key=True)
-    #  posts: list["Post"] = Relationship(back_populates="board")
+#  class Board(SQLModel, table=True):
+#      id: Optional[int] = Field(default=None, primary_key=True)
+#      uri: str
+#      #  id: str = Field(default=None, primary_key=True)
+#      #  posts: list["Post"] = Relationship(back_populates="board")
+#
+#
+#  class BoardReceiveDTO(PydanticDTO[Board]):
+#      config: DTOConfig = DTOConfig(exclude={"id"})
+#
+#
+#  class BoardSendDTO(PydanticDTO[Board]):
+#      config: DTOConfig = DTOConfig()
 
-class BoardReceiveDTO(PydanticDTO[Board]):
-    config: DTOConfig = DTOConfig(exclude={"id"})
 
-class BoardSendDTO(PydanticDTO[Board]):
-    config: DTOConfig = DTOConfig()
+def board_id_exists(db_session, board_id: int) -> bool:
+    board_exists: bool = uid_exists(db_session=db_session,
+                                    model=Board,
+                                    unique_id_field=Board.id,
+                                    unique_id_value=board_id)
+    return board_exists
 
 
-#  def board_id_exists(db_session, board_id: int) -> bool:
-#          statement: SelectOfScalar[Board] = \
-#              select(Board).where(Board.id == board_id)
-#
-#          board_exists: Board | None = \
-#              db_session.exec(statement=statement).first()
-#
-#          return bool(board_exists)
-#
-#
-#  def board_uri_exists(db_session, board_uri: str) -> bool:
-#          statement: SelectOfScalar[Board] = \
-#              select(Board).where(Board.uri == board_uri)
-#
-#          board_exists: Board | None = \
-#              db_session.exec(statement=statement).first()
-#
-#          return bool(board_exists)
+def board_uri_exists(db_session, board_uri: int) -> bool:
+    board_exists: bool = uid_exists(db_session=db_session,
+                                    model=Board,
+                                    unique_id_field=Board.uri,
+                                    unique_id_value=board_uri)
+    return board_exists
 
 
 class BoardController(Controller):

@@ -5,6 +5,11 @@ from litestar.dto import DTOConfig
 
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
 
+
+#  ┌──────┐
+#  │ site │
+#  └──────┘
+
 class Site(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     uri: str
@@ -14,6 +19,11 @@ class SiteSendDTO(PydanticDTO[Site]):
 
 class SiteReceiveDTO(PydanticDTO[Site]):
     config: DTOConfig = DTOConfig(exclude={"id"})
+
+
+#  ┌───────┐
+#  │ board │
+#  └───────┘
 
 class Board(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -29,6 +39,11 @@ class BoardReceiveDTO(PydanticDTO[Board]):
 class BoardSendDTO(PydanticDTO[Board]):
     config: DTOConfig = DTOConfig()
 
+
+#  ┌──────┐
+#  │ post │
+#  └──────┘
+
 class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int
@@ -40,6 +55,7 @@ class Post(SQLModel, table=True):
 
 class PostReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
+
 
 class PostSendDTO(PydanticDTO[Post]):
     #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})

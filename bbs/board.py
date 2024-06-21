@@ -17,7 +17,7 @@ from sqlmodel.sql.expression import SelectOfScalar
 from .models import Board, BoardReceiveDTO, BoardSendDTO
 from .models import Post
 
-from .functions import uid_exists
+#  from .functions import uid_exists
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"

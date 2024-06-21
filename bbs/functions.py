@@ -25,7 +25,7 @@ def board_id_exists(db_session, board_id: int) -> bool:
     return board_exists
 
 
-def board_uri_exists(db_session, board_uri: int) -> bool:
+def board_uri_exists(db_session, board_uri: str) -> bool:
     board_exists: bool = uid_exists(db_session=db_session,
                                     model=Board,
                                     unique_id_field=Board.uri,

@@ -21,11 +21,11 @@ python -m bbs run
 2. use the commands:
 
 ```
-git clone git@github.com:iacchus/bbs.git  # clone repo
-python -m venv .venv  # install virtualenv
-source .venv/bin/activate  # activate virtualenv
-direnv allow  # allow .envrc
-python install -e .  # install editable
+git clone git@github.com:iacchus/bbs.git
+python -m venv .venv
+source .venv/bin/activate
+direnv allow
+python install -e .
 ```
 
 3. run as above

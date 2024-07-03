@@ -22,6 +22,7 @@ python -m bbs run
 
 ```
 git clone git@github.com:iacchus/bbs.git
+cd bbs/
 python -m venv .venv
 source .venv/bin/activate
 direnv allow

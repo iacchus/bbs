@@ -79,10 +79,15 @@ class PostSendDTO(PydanticDTO[Post]):
 #  │ User │
 #  └──────┘
 
-
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: int
     password: str
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
+
+class UserReceiveDTO(PydanticDTO[User]):
+    config: DTOConfig = DTOConfig(exclude={"id", "username"})
+
+class UserSendDTO(PydanticDTO[User]):
+    config: DTOConfig = DTOConfig()

@@ -22,11 +22,7 @@ class AuthenticationMiddleware(AbstractAuthenticationMiddleware):
         super().__init__(*args, **kwargs)
         self.db_engine = db_engine
 
-    #  async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
     async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
-                                   #  db_engine: Engine) -> AuthenticationResult:
-        #  pass
-        #  return await super().authenticate_request(connection)
 
         auth_header = connection.headers.get(API_KEY_HEADER)
         if not auth_header:

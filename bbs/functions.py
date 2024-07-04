@@ -3,6 +3,7 @@ from sqlmodel import select
 from .models import Site
 from .models import Board
 from .models import Post
+from .models import User
 
 
 def uid_exists(db_session, model,
@@ -39,3 +40,19 @@ def post_id_exists(db_session, post_id: int) -> bool:
                                     unique_id_field=Post.id,
                                     unique_id_value=post_id)
     return post_exists
+
+
+def user_id_exists(db_session, user_id: int) -> bool:
+    user_exists: bool = uid_exists(db_session=db_session,
+                                   model=User,
+                                   unique_id_field=User.id,
+                                   unique_id_value=user_id)
+    return user_exists
+
+
+def username_exists(db_session, username: str) -> bool:
+    user_exists: bool = uid_exists(db_session=db_session,
+                                    model=User,
+                                    unique_id_field=User.username,
+                                    unique_id_value=username)
+    return user_exists

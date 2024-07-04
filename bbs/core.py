@@ -57,7 +57,9 @@ class BBS:
                 SiteController
         ]
 
-        auth_mw = DefineMiddleware(AuthenticationMiddleware, exclude="schema")
+        auth_mw = DefineMiddleware(middleware=AuthenticationMiddleware,
+                                   exclude="schema",
+                                   db_engine=self.engine)
         self.auth_mw = auth_mw
 
         middleware = [
@@ -66,9 +68,9 @@ class BBS:
 
         self.api = Litestar(route_handlers=route_handlers,
                             dependencies=dependencies,
-                            middleware=middleware)
-                            #  middleware=middleware,
-                            #  pdb_on_exception=True)
+                            #  middleware=middleware)
+                            middleware=middleware,
+                            pdb_on_exception=True)
                                       #  dependencies=dependencies)
                                       #  dependencies=dependencies,
                                       #  pdb_on_exception=True)

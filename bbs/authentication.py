@@ -18,6 +18,10 @@ API_KEY_HEADER = "X-API-KEY"
 
 class AuthenticationMiddleware(AbstractAuthenticationMiddleware):
 
+    def __init__(self, db_engine: Engine, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.db_engine = db_engine
+
     #  async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
     async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
                                    #  db_engine: Engine) -> AuthenticationResult:
@@ -30,14 +34,15 @@ class AuthenticationMiddleware(AbstractAuthenticationMiddleware):
 
         token = decode_jwt_token(encoded_token=auth_header)
 
-        #  session = Session(bind=db_engine, expire_on_commit=False)
-        #  statement = select(User).where(User.id == token.sub)
-        #  user = session.exec(statement=statement).first()
-        #  #  results = session.exec(statement=statement).all()
-        #
-        #  if not user:
-        #      raise NotAuthorizedException()
+        db_engine = self.db_engine
+        session = Session(bind=db_engine, expire_on_commit=False)
+        statement = select(User).where(User.id == token.sub)
+        user = session.exec(statement=statement).first()
+        #  results = session.exec(statement=statement).all()
 
-        #  return AuthenticationResult(user=user, auth=token)
-        return AuthenticationResult(user=1, auth=token)
+        if not user:
+            raise NotAuthorizedException()
+
+        return AuthenticationResult(user=user, auth=token)
+        #  return AuthenticationResult(user=1, auth=token)
 

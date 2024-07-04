@@ -1,27 +1,13 @@
-from typing import Annotated, Sequence
-#  from typing import Annotated
-from typing import Optional
-
-from litestar import Litestar, middleware
-from litestar import Controller
-from litestar import get
-from litestar import post
+from litestar import Litestar
 from litestar.di import Provide
-from litestar.contrib.pydantic import PydanticDTO
-from litestar.dto import DTOConfig
-from litestar.exceptions import NotFoundException
 from litestar.middleware.base import DefineMiddleware
 
-from sqlalchemy import engine, Engine
-from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
-from sqlmodel.sql.expression import SelectOfScalar
+from sqlmodel import SQLModel, create_engine
 
-#  from .board import BoardController
-#  from .post import PostController
-#  from .site import SiteController
 from .site import SiteController
 from .board import BoardController
 from .post import PostController
+from .user import UserController
 
 from .authentication import AuthenticationMiddleware
 
@@ -54,7 +40,8 @@ class BBS:
         route_handlers: list = [
                 BoardController,
                 PostController,
-                SiteController
+                SiteController,
+                UserController
         ]
 
         auth_mw = DefineMiddleware(middleware=AuthenticationMiddleware,
@@ -71,9 +58,6 @@ class BBS:
                             middleware=middleware)
                             #  middleware=middleware,
                             #  pdb_on_exception=True)
-                                      #  dependencies=dependencies)
-                                      #  dependencies=dependencies,
-                                      #  pdb_on_exception=True)
 
     async def get_uri(self) -> str:
         return self.instance

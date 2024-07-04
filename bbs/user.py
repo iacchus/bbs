@@ -8,25 +8,27 @@ from litestar.exceptions import NotFoundException
 from sqlalchemy import Engine
 from sqlmodel import Session, select
 
-from .models import User, UserReceiveDTO, UserSendDTO, ReplyReceiveDTO
-from .functions import board_id_exists, user_id_exists
+from .models import User, UserReceiveDTO, UserSendDTO
+from .functions import user_id_exists, username_exists
 
 
 class UserController(Controller):
     path = "/user"
 
     @get("/{user_id:int}", dto=UserReceiveDTO, return_dto=UserSendDTO)
-    async def get_users(self, site_uri: str, user_id: int,
-                        db_engine: Engine) -> Sequence[User]:
+    async def get_user(self, site_uri: str, user_id: int,
+                       db_engine: Engine) -> User:
+                       #  db_engine: Engine) -> Sequence[User]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(User).where(User.id == user_id)
-        results = session.exec(statement=statement).all()
+        #  user: User = session.exec(statement=statement).first()
+        user = session.exec(statement=statement).all()[0]
 
-        if not results:
+        if not user:
             raise NotFoundException(f'User id {user_id} does not exist')
 
-        return results
+        return user
 
     @post("/", dto=UserReceiveDTO, return_dto=UserSendDTO)
     async def create_user(self, data: User, db_engine: Engine) -> User | None:
@@ -36,7 +38,8 @@ class UserController(Controller):
 
         new_user: User = data
 
-        if board_id_exists(db_session=session, board_id=new_user.board_id):
+        #  if board_id_exists(db_session=session, board_id=new_user.board_id):
+        if not username_exists(db_session=session, username=new_user.username):
             session.add(new_user)
             session.commit()
             session.close()
@@ -44,27 +47,6 @@ class UserController(Controller):
             return new_user
 
         else:
-            raise NotFoundException(f'Board id {new_user.board_id} does not exist')
+            raise NotFoundException(f'Username `{new_user.username}`"
+                                    " already exists')
 
-    #  @post("/{reply_to_id:int}", dto=ReplyReceiveDTO, return_dto=UserSendDTO)
-    #  async def reply_to_user(self, reply_to_id: int, data: User,
-    #                          db_engine: Engine) -> User | None:
-    #      """Replies to user"""
-    #
-    #      session = Session(bind=db_engine, expire_on_commit=False)
-    #
-    #      if user_id_exists(db_session=session, user_id=reply_to_id):
-    #          new_user: User = data
-    #          new_user.reply_to_id = reply_to_id
-    #          new_user.board_id = 0
-    #
-    #          session.add(new_user)
-    #          session.commit()
-    #          session.close()
-    #
-    #          return new_user
-    #
-    #      else:
-    #          raise NotFoundException(f'User id {reply_to_id} does not exist')
-    #
-    #

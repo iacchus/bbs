@@ -81,13 +81,14 @@ class PostSendDTO(PydanticDTO[Post]):
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: int
+    username: str  # FIXME: limit the characters allowed here
     password: str
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
 
 class UserReceiveDTO(PydanticDTO[User]):
-    config: DTOConfig = DTOConfig(exclude={"id", "username"})
+    config: DTOConfig = DTOConfig(exclude={"id"})
+    #  config: DTOConfig = DTOConfig(exclude={"id", "username"})
 
 class UserSendDTO(PydanticDTO[User]):
     config: DTOConfig = DTOConfig()

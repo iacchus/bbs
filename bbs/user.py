@@ -22,8 +22,7 @@ class UserController(Controller):
 
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(User).where(User.id == user_id)
-        #  user: User = session.exec(statement=statement).first()
-        user = session.exec(statement=statement).all()[0]
+        user: User | None = session.exec(statement=statement).first()
 
         if not user:
             raise NotFoundException(f'User id {user_id} does not exist')
@@ -38,7 +37,6 @@ class UserController(Controller):
 
         new_user: User = data
 
-        #  if board_id_exists(db_session=session, board_id=new_user.board_id):
         if not username_exists(db_session=session, username=new_user.username):
             session.add(new_user)
             session.commit()
@@ -47,6 +45,6 @@ class UserController(Controller):
             return new_user
 
         else:
-            raise NotFoundException(f'Username `{new_user.username}`"
-                                    " already exists')
+            raise NotFoundException(f'Username `{new_user.username}`'
+                                    ' already exists')
 

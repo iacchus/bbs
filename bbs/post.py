@@ -53,10 +53,6 @@ class PostController(Controller):
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
-        #  new_post: Post = data
-        #  new_post.reply_to_id = reply_to_id
-        #  new_post.board_id = 0
-
         if post_id_exists(db_session=session, post_id=reply_to_id):
             new_post: Post = data
             new_post.reply_to_id = reply_to_id

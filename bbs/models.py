@@ -60,6 +60,11 @@ class TopicReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "reply_to_id"})
     # `reply_to_id` for topics is always `0` (int zero)
 
+class BoardTopicReceiveDTO(PydanticDTO[Post]):
+    config: DTOConfig = DTOConfig(exclude={"id", "board_id", "reply_to_id"})
+    # `reply_to_id` for topics is always `0` (int zero)
+    # `board_id` is taken from http path
+
 class ReplyReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "reply_to_id", "board_id"})
     # `reply_to_id` is taken via http path

@@ -8,7 +8,7 @@ from litestar.exceptions import NotFoundException
 from sqlalchemy import Engine
 from sqlmodel import Session, select
 
-from .models import Post, PostReceiveDTO, PostSendDTO
+from .models import Post, PostReceiveDTO, PostSendDTO, ReplyReceiveDTO
 from .functions import board_id_exists, post_id_exists
 
 
@@ -45,29 +45,29 @@ class PostController(Controller):
 
     # WRITEME
 
-    #  @post("/{reply_to_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
-    #  async def reply_to_post(self, reply_to_id: int, data: Post,
-    #                          db_engine: Engine) -> Post | None:
-    #      """Replies to post"""
-    #
-    #      session = Session(bind=db_engine, expire_on_commit=False)
-    #
-    #      #  new_post: Post = data
-    #      #  new_post.reply_to_id = reply_to_id
-    #      #  new_post.board_id = 0
-    #
-    #      if post_id_exists(db_session=session, post_id=reply_to_id):
-    #          new_post: Post = data
-    #          new_post.reply_to_id = reply_to_id
-    #          new_post.board_id = 0
-    #
-    #          session.add(new_post)
-    #          session.commit()
-    #          session.close()
-    #
-    #          return new_post
-    #
-    #      else:
-    #          raise NotFoundException(f'Post id {reply_to_id} does not exist')
+    @post("/{reply_to_id:int}", dto=ReplyReceiveDTO, return_dto=PostSendDTO)
+    async def reply_to_post(self, reply_to_id: int, data: Post,
+                            db_engine: Engine) -> Post | None:
+        """Replies to post"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        #  new_post: Post = data
+        #  new_post.reply_to_id = reply_to_id
+        #  new_post.board_id = 0
+
+        if post_id_exists(db_session=session, post_id=reply_to_id):
+            new_post: Post = data
+            new_post.reply_to_id = reply_to_id
+            new_post.board_id = 0
+
+            session.add(new_post)
+            session.commit()
+            session.close()
+
+            return new_post
+
+        else:
+            raise NotFoundException(f'Post id {reply_to_id} does not exist')
 
 

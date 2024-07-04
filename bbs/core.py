@@ -2,7 +2,7 @@ from typing import Annotated, Sequence
 #  from typing import Annotated
 from typing import Optional
 
-from litestar import Litestar
+from litestar import Litestar, middleware
 from litestar import Controller
 from litestar import get
 from litestar import post
@@ -10,6 +10,7 @@ from litestar.di import Provide
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.dto import DTOConfig
 from litestar.exceptions import NotFoundException
+from litestar.middleware.base import DefineMiddleware
 
 from sqlalchemy import engine, Engine
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
@@ -21,6 +22,8 @@ from sqlmodel.sql.expression import SelectOfScalar
 from .site import SiteController
 from .board import BoardController
 from .post import PostController
+
+from .authentication import AuthenticationMiddleware
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
@@ -54,8 +57,19 @@ class BBS:
                 SiteController
         ]
 
+        auth_mw = DefineMiddleware(AuthenticationMiddleware, exclude="schema")
+        self.auth_mw = auth_mw
+
+        middleware = [
+                self.auth_mw
+        ]
+
         self.api = Litestar(route_handlers=route_handlers,
-                                      dependencies=dependencies)
+                            dependencies=dependencies,
+                            #  middleware=middleware)
+                            middleware=middleware,
+                            pdb_on_exception=True)
+                                      #  dependencies=dependencies)
                                       #  dependencies=dependencies,
                                       #  pdb_on_exception=True)
 

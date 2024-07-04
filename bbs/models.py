@@ -73,3 +73,16 @@ class ReplyReceiveDTO(PydanticDTO[Post]):
 class PostSendDTO(PydanticDTO[Post]):
     #  config: DTOConfig = DTOConfig(exclude={"id", "board_id"})
     config: DTOConfig = DTOConfig()
+
+
+#  ┌──────┐
+#  │ User │
+#  └──────┘
+
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: int
+    password: str
+    #  board_id: int = Field(default=None, foreign_key="board.id")
+    #  board: Board = Relationship(back_populates="posts")

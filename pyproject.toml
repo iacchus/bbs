@@ -7,9 +7,9 @@ name = "bbs"
 version = "0.0.1"
 dependencies = [
   "click",
-  # "fastapi",
   "litestar",
   "pydantic",
+  "python-jose",
   "sqlmodel",
   "starlette",
   "toml",

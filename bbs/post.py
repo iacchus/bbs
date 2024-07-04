@@ -23,6 +23,9 @@ class PostController(Controller):
         statement = select(Post).where(Post.id == post_id)
         results = session.exec(statement=statement).all()
 
+        if not results:
+            raise NotFoundException(f'Post id {post_id} does not exist')
+
         return results
 
     @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
@@ -42,8 +45,6 @@ class PostController(Controller):
 
         else:
             raise NotFoundException(f'Board id {new_post.board_id} does not exist')
-
-    # WRITEME
 
     @post("/{reply_to_id:int}", dto=ReplyReceiveDTO, return_dto=PostSendDTO)
     async def reply_to_post(self, reply_to_id: int, data: Post,

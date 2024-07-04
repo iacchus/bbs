@@ -38,6 +38,8 @@ python install -e .
 * [fastapi](https://fastapi.tiangolo.com/)
 * [httpie](https://httpie.io/docs/cli/main-features)
 * [jupyter notebooks](https://github.com/iacchus/jupyter-notebooks)
+* [jwt claims](https://www.iana.org/assignments/jwt/jwt.xhtml)
+* [jwt introduction](https://jwt.io/introduction)
 * [notebooks](https://github.com/iacchus/jupyter-notebooks/)
 * [piccolo](https://piccolo-orm.readthedocs.io/en/latest/)
 * [pydantic](https://docs.pydantic.dev/latest/)

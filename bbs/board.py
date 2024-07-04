@@ -2,6 +2,7 @@ from typing import Sequence
 
 from litestar import Controller
 from litestar import get, post
+from litestar.exceptions import NotFoundException
 from litestar.exceptions import ValidationException
 
 from sqlalchemy import Engine
@@ -10,7 +11,7 @@ from sqlmodel import Session, select
 from .models import Board, BoardReceiveDTO, BoardSendDTO
 from .models import Post
 
-from .functions import board_uri_exists
+from .functions import board_id_exists, board_uri_exists
 
 
 class BoardController(Controller):
@@ -21,7 +22,7 @@ class BoardController(Controller):
     async def get_boards(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
-        #  statement = select(Post)
+
         statement = select(Board)
         results = session.exec(statement=statement).all()
 
@@ -32,10 +33,13 @@ class BoardController(Controller):
                         db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
-        statement = select(Post).where(Post.board_id == board_id)
-        results = session.exec(statement=statement).all()
+        if board_id_exists(db_session=session, board_id=board_id):
+            statement = select(Post).where(Post.board_id == board_id)
+            results = session.exec(statement=statement).all()
 
-        return results
+            return results
+        else:
+            raise NotFoundException(f'Board id {board_id} does not exist')
 
     @post(path="/", dto=BoardReceiveDTO, return_dto=BoardSendDTO)
     def create_board(self, db_engine: Engine, data: Board) -> Board:
@@ -51,5 +55,5 @@ class BoardController(Controller):
             return new_board
 
         else:
-            raise ValidationException("Board URI already exists")
+            raise ValidationException("Board uri already exists")
 

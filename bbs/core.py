@@ -68,9 +68,9 @@ class BBS:
 
         self.api = Litestar(route_handlers=route_handlers,
                             dependencies=dependencies,
-                            #  middleware=middleware)
-                            middleware=middleware,
-                            pdb_on_exception=True)
+                            middleware=middleware)
+                            #  middleware=middleware,
+                            #  pdb_on_exception=True)
                                       #  dependencies=dependencies)
                                       #  dependencies=dependencies,
                                       #  pdb_on_exception=True)

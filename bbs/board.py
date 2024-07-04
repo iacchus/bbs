@@ -18,7 +18,7 @@ class BoardController(Controller):
     path = "/board"
 
     @get("/")
-    async def get_posts(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
+    async def get_boards(self, site_uri: str, db_engine: Engine) -> Sequence[Board]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
         #  statement = select(Post)

@@ -1,10 +1,12 @@
+from typing import Sequence
+
 from litestar import Controller
 from litestar import get
 from litestar import post
 from litestar.exceptions import NotFoundException
 
 from sqlalchemy import Engine
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from .models import Post, PostReceiveDTO, PostSendDTO
 from .functions import board_id_exists
@@ -12,6 +14,16 @@ from .functions import board_id_exists
 
 class PostController(Controller):
     path = "/post"
+
+    @get("/{post_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
+    async def get_posts(self, site_uri: str, post_id: int,
+                        db_engine: Engine) -> Sequence[Post]:
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+        statement = select(Post).where(Post.id == post_id)
+        results = session.exec(statement=statement).all()
+
+        return results
 
     @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def create_post(self, data: Post, db_engine: Engine) -> Post | None:

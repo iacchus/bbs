@@ -43,6 +43,7 @@ python install -e .
 * [notebooks](https://github.com/iacchus/jupyter-notebooks/)
 * [piccolo](https://piccolo-orm.readthedocs.io/en/latest/)
 * [pydantic](https://docs.pydantic.dev/latest/)
+* [pyjwt](https://pyjwt.readthedocs.io/en/stable/index.html)
 * [sqlmodel](https://sqlmodel.tiangolo.com/)
 * [starlette](https://www.starlette.io/)
 * [uvicorn](https://www.uvicorn.org/)

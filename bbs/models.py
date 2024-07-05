@@ -48,9 +48,15 @@ class Post(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int
     text: str
-    reply_to_id: int
+    reply_to_id: int = Field(foreign_key="post.id")
+    # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
+    # https://stackoverflow.com/questions/73420018/how-do-i-construct-a-self-referential-recursive-sqlmodel
+    replies = Relationship("Post", back_populates="reply_to" sa_relationship_kwargs=dict(remote_side=[id]))  # type: ignore
+    #  replies = Relationship("Post", remote_side=[id])
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
+    reply_to = Relationship("Post", back_populates="replies")  # pyright: ignore
+
 
 
 class PostReceiveDTO(PydanticDTO[Post]):

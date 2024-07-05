@@ -34,11 +34,9 @@ class AuthenticationMiddleware(AbstractAuthenticationMiddleware):
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(User).where(User.id == token.sub)
         user = session.exec(statement=statement).first()
-        #  results = session.exec(statement=statement).all()
 
         if not user:
             raise NotAuthorizedException()
 
         return AuthenticationResult(user=user, auth=token)
-        #  return AuthenticationResult(user=1, auth=token)
 

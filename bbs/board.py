@@ -67,7 +67,7 @@ class BoardController(Controller):
             raise NotFoundException(f'Board id {board_id} does not exist')
 
     @post(path="/", dto=BoardReceiveDTO, return_dto=BoardSendDTO)
-    def create_board(self, db_engine: Engine, data: Board) -> Board:
+    async def create_board(self, db_engine: Engine, data: Board) -> Board:
         session = Session(bind=db_engine, expire_on_commit=False)
 
         new_board: Board = data

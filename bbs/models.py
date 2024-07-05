@@ -1,10 +1,15 @@
 from typing import Optional
+#  from typing import List
+#  from typing import Sequence
 
 from litestar.contrib.pydantic import PydanticDTO
 from litestar.dto import DTOConfig
 
 from sqlmodel import Field, Relationship, Session, SQLModel, create_engine, select, table
+from sqlmodel import Sequence
 
+#  from pydantic.types import List
+#  from sqlalchemy.types import
 
 #  ┌──────┐
 #  │ site │
@@ -45,17 +50,29 @@ class BoardSendDTO(PydanticDTO[Board]):
 #  └──────┘
 
 class Post(SQLModel, table=True):
+    __tablename__: str = "post"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     board_id: int
     text: str
     reply_to_id: int = Field(foreign_key="post.id")
+    replies: list["Post"] = Relationship(back_populates="op")
+    op: Optional["Post"] = Relationship(back_populates="replies", sa_relationship_kwargs=dict(remote_side=['Post.id']))
+    #  replies: Sequence["Post"] = Relationship(sa_relationship_kwargs={'remote_side':['id']})
+    #  replies: List["Post"]
+    #  replies: Sequence["Post"]
     # https://docs.sqlalchemy.org/en/20/orm/self_referential.html
     # https://stackoverflow.com/questions/73420018/how-do-i-construct-a-self-referential-recursive-sqlmodel
-    replies = Relationship("Post", back_populates="reply_to" sa_relationship_kwargs=dict(remote_side=[id]))  # type: ignore
+    #  replies: Sequence["Post"] = Relationship(sa_relationship_kwargs=dict(remote_side=[id]))
+    #  replies: Sequence["Post"] = Relationship(sa_relationship_kwargs=dict(remote_side=['Post.reply_to_id']))
+    #  replies: Sequence["Post"] = Relationship()
+    #  replies: Sequence["Post"] = Relationship(b)
+    #  replies: Sequence["Post"] = Relationship(sa_relationship_kwargs=dict(remote_side=[reply_to_id]))
+    #  replies: Sequence["Post"] = Relationship(back_populates="reply_to", sa_relationship_kwargs=dict(remote_side=[reply_to_id]))
     #  replies = Relationship("Post", remote_side=[id])
     #  board_id: int = Field(default=None, foreign_key="board.id")
     #  board: Board = Relationship(back_populates="posts")
-    reply_to = Relationship("Post", back_populates="replies")  # pyright: ignore
+    #  reply_to: "Post" = Relationship(back_populates="replies")
 
 
 

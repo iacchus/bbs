@@ -1,12 +1,11 @@
 from datetime import datetime, timedelta
 
-from jose import jwt
-from jose import JWTError
-
 from litestar.exceptions import NotAuthorizedException
 
 from pydantic import BaseModel
 from pydantic import UUID4
+
+import jwt
 
 # https://docs.litestar.dev/2/usage/security/abstract-authentication-middleware.html
 
@@ -26,12 +25,13 @@ class Token(BaseModel):
 
 def decode_jwt_token(encoded_token: str) -> Token:
     try:
-        payload = jwt.decode(token=encoded_token, key=settings['JWT_SECRET'],
+        payload = jwt.decode(jwt=encoded_token, key=settings['JWT_SECRET'],
                              algorithms=[ALGORITHM])
         return Token(**payload)
 
-    except JWTError as e:
-        raise NotAuthorizedException(f"Invalid token {encoded_token}") from e
+    #  except JWTError as e:
+    except:
+        raise NotAuthorizedException(f"Invalid token")
 
 
 def encode_jwt_token(user_id: int, expiration: timedelta = DEFAULT_TIME_DELTA) -> str:

@@ -50,7 +50,7 @@ class BBS:
         self.auth_mw = auth_mw
 
         middleware = [
-                #  self.auth_mw
+                self.auth_mw
         ]
 
         self.api = Litestar(route_handlers=route_handlers,

@@ -50,7 +50,8 @@ class UserController(Controller):
             raise NotFoundException(f'Username `{new_user.username}`'
                                     ' already exists')
 
-    @post("/login", dto=UserReceiveDTO, return_dto=UserSendDTO)
+    @post("/login", dto=UserReceiveDTO, return_dto=UserSendDTO,
+          exclude_from_auth=True)
     async def get_user(self, data: User, site_uri: str,
                        db_engine: Engine) -> Token:
 

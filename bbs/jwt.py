@@ -31,7 +31,7 @@ def decode_jwt_token(encoded_token: str) -> Token:
         return Token(**payload)
 
     except JWTError as e:
-        raise NotAuthorizedException("Invalid token") from e
+        raise NotAuthorizedException(f"Invalid token {encoded_token}") from e
 
 
 def encode_jwt_token(user_id: int, expiration: timedelta = DEFAULT_TIME_DELTA) -> str:

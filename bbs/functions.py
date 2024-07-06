@@ -56,3 +56,22 @@ def username_exists(db_session, username: str) -> bool:
                                     unique_id_field=User.username,
                                     unique_id_value=username)
     return user_exists
+
+
+def recurse_thread(post_obj, max_depth=3, parent_depth=0) -> dict:
+    # Thread's OP is level 1
+
+    current_depth = parent_depth + 1
+
+    post = post_obj.model_dump()
+    post.update({"replies": list()})
+
+    replies_list: list[Post] = post_obj.replies
+    if replies_list and current_depth < max_depth:
+        for reply_obj in replies_list:
+            reply: dict = recurse_thread(post_obj=reply_obj,
+                                         max_depth=max_depth,
+                                         parent_depth=current_depth)
+            post["replies"].append(reply)
+
+    return post

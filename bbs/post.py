@@ -10,14 +10,15 @@ from sqlmodel import Session, select
 
 from .models import Post, PostReceiveDTO, PostSendDTO, ReplyReceiveDTO
 from .functions import board_id_exists, post_id_exists
-
+from .functions import get_thread
 
 class PostController(Controller):
     path = "/post"
 
     @get("/{post_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def get_posts(self, site_uri: str, post_id: int,
-                        db_engine: Engine) -> Sequence[Post]:
+                        db_engine: Engine) -> dict:
+                        #  db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
         statement = select(Post).where(Post.id == post_id)
@@ -26,7 +27,10 @@ class PostController(Controller):
         if not results:
             raise NotFoundException(f'Post id {post_id} does not exist')
 
-        return results
+        thread = get_thread(post_obj=results[0])
+
+        #  return results
+        return thread
 
     @post("/", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def create_post(self, data: Post, db_engine: Engine) -> Post | None:

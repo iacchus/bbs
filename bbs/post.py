@@ -27,7 +27,8 @@ class PostController(Controller):
         if not results:
             raise NotFoundException(f'Post id {post_id} does not exist')
 
-        thread = get_thread(post_obj=results[0])
+        thread: dict = get_thread(post_obj=results[0],
+                                  max_depth=4)
 
         #  return results
         return thread

@@ -1,9 +1,8 @@
-from typing import Sequence
-
 from litestar import Controller
+from litestar import post
 from litestar import get
 from litestar import patch
-from litestar import post
+from litestar import delete
 from litestar.exceptions import NotFoundException
 
 from sqlalchemy import Engine
@@ -23,9 +22,11 @@ class PostController(Controller):
                         #  db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
-        statement = select(Post).where(Post.id == post_id).limit(1)
+
+        #  statement = select(Post).where(Post.id == post_id).limit(1)
         #  results = session.exec(statement=statement).all()
-        post: Post | None = session.exec(statement=statement).first()
+        #  post: Post | None = session.exec(statement=statement).first()
+        post: Post | None = session.get(Post, post_id)
 
         if not post:
             raise NotFoundException(f'Post id {post_id} does not exist')
@@ -82,7 +83,7 @@ class PostController(Controller):
     @patch("/{post_id:int}", dto=PostPatchDTO, return_dto=PostSendDTO)
     async def edit_post(self, post_id: int, data: Post,
                             db_engine: Engine) -> Post | None:
-        """Updates the post"""
+        """Updates post"""
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
@@ -96,6 +97,26 @@ class PostController(Controller):
             session.close()
 
             return post
+
+        else:
+            raise NotFoundException(f'Post id {post_id} does not exist')
+
+    @delete("/{post_id:int}")
+    async def delete_post(self, post_id: int, db_engine: Engine) -> None:
+        """Deletes post"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        post: Post | None = session.get(Post, post_id)
+
+        if post:
+            session.delete(post)
+            # FIXME: delete children or just rewrite post/change owner
+
+            session.commit()
+            session.close()
+
+            return None
 
         else:
             raise NotFoundException(f'Post id {post_id} does not exist')

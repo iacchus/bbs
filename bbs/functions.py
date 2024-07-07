@@ -58,7 +58,6 @@ def username_exists(db_session, username: str) -> bool:
     return user_exists
 
 
-#  def recurse_thread(post_obj, max_depth=3, parent_depth=0) -> dict:
 def get_thread(post_obj, max_depth=3, parent_depth=0) -> dict:
     # Thread's OP is level 1
 
@@ -76,3 +75,28 @@ def get_thread(post_obj, max_depth=3, parent_depth=0) -> dict:
             post["replies"].append(reply)
 
     return post
+
+#  def get_thread_flattened(post_obj, max_depth=3, parent_depth=0) -> list:
+def get_thread_flattened(post_obj, posts=[], max_depth=3, parent_depth=0) -> list[dict]:
+    # Thread's OP is level 1
+
+    current_depth = parent_depth + 1
+
+    #  posts: list[dict] = list()
+
+    post: dict = post_obj.model_dump()
+    posts.append(post)
+    #  post.update({"replies": list()})
+
+    replies_list: list[Post] = post_obj.replies
+    if replies_list and current_depth < max_depth:
+        for reply_obj in replies_list:
+            reply: list = get_thread_flattened(post_obj=reply_obj,
+                                               posts=posts,
+                                               max_depth=max_depth,
+                                               parent_depth=current_depth)
+            #  post["replies"].append(reply)
+            #  posts.append(reply)
+            #posts.extend()(reply)
+
+    return posts

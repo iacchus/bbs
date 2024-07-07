@@ -12,26 +12,26 @@ from .models import Post, PostReceiveDTO, PostSendDTO, ReplyReceiveDTO
 from .models import PostPatchDTO
 from .functions import board_id_exists, post_id_exists
 from .functions import get_thread
+from .functions import get_thread_flattened
 
 class PostController(Controller):
     path = "/post"
 
     @get("/{post_id:int}", dto=PostReceiveDTO, return_dto=PostSendDTO)
     async def get_posts(self, site_uri: str, post_id: int,
-                        db_engine: Engine) -> dict:
+                        db_engine: Engine, flat: bool = False) -> dict:
                         #  db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
-        #  statement = select(Post).where(Post.id == post_id).limit(1)
-        #  results = session.exec(statement=statement).all()
-        #  post: Post | None = session.exec(statement=statement).first()
         post: Post | None = session.get(Post, post_id)
 
         if not post:
             raise NotFoundException(f'Post id {post_id} does not exist')
-
-        thread: dict = get_thread(post_obj=post, max_depth=4)
+        if not flat:
+            thread: dict = get_thread(post_obj=post, max_depth=4)
+        else:
+            thread: dict = get_thread_flattened(post_obj=post, max_depth=4)
 
         #  return results
         return thread

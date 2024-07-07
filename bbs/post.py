@@ -21,14 +21,14 @@ class PostController(Controller):
                         #  db_engine: Engine) -> Sequence[Post]:
 
         session = Session(bind=db_engine, expire_on_commit=False)
-        statement = select(Post).where(Post.id == post_id)
-        results = session.exec(statement=statement).all()
+        statement = select(Post).where(Post.id == post_id).limit(1)
+        #  results = session.exec(statement=statement).all()
+        post: Post | None = session.exec(statement=statement).first()
 
-        if not results:
+        if not post:
             raise NotFoundException(f'Post id {post_id} does not exist')
 
-        thread: dict = get_thread(post_obj=results[0],
-                                  max_depth=4)
+        thread: dict = get_thread(post_obj=post, max_depth=4)
 
         #  return results
         return thread

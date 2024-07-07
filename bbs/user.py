@@ -1,8 +1,10 @@
 from typing import Sequence
 
-from litestar import Controller
-from litestar import get
+from litestar import Controller, delete
 from litestar import post
+from litestar import get
+from litestar import patch
+from litestar import delete
 from litestar.exceptions import NotFoundException
 from litestar.exceptions import NotAuthorizedException
 
@@ -75,3 +77,22 @@ class UserController(Controller):
             raise NotAuthorizedException("Invalid login credentials")
 
 
+    @delete("/{user_id:int}")
+    async def delete_user(self, user_id: int, db_engine: Engine) -> None:
+        """Deletes user"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        user: User | None = session.get(User, user_id)
+
+        if user:
+            session.delete(user)
+            # FIXME: delete children or just rewrite user/change owner
+
+            session.commit()
+            session.close()
+
+            return None
+
+        else:
+            raise NotFoundException(f'User id {user_id} does not exist')

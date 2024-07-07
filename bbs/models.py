@@ -40,6 +40,8 @@ class Board(SQLModel, table=True):
 class BoardReceiveDTO(PydanticDTO[Board]):
     config: DTOConfig = DTOConfig(exclude={"id"})
 
+class BoardPatchDTO(PydanticDTO[Board]):
+    config: DTOConfig = DTOConfig(exclude={"id"})
 
 class BoardSendDTO(PydanticDTO[Board]):
     config: DTOConfig = DTOConfig()

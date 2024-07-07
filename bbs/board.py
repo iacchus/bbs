@@ -1,14 +1,19 @@
 from typing import Sequence
 
 from litestar import Controller
-from litestar import get, post
+from litestar import post
+from litestar import get
+from litestar import patch
+from litestar import delete
 from litestar.exceptions import NotFoundException
 from litestar.exceptions import ValidationException
 
 from sqlalchemy import Engine
-from sqlmodel import Session, select
+from sqlmodel import Session
+from sqlmodel import select
 
 from .models import Board, BoardReceiveDTO, BoardSendDTO
+from .models import BoardPatchDTO
 #  from .models import Post, TopicReceiveDTO, PostSendDTO
 from .models import Post
 from .models import BoardTopicReceiveDTO
@@ -82,3 +87,44 @@ class BoardController(Controller):
         else:
             raise ValidationException("Board uri already exists")
 
+    @patch("/{board_id:int}", dto=BoardPatchDTO, return_dto=BoardSendDTO)
+    async def edit_board(self, board_id: int, data: Board,
+                            db_engine: Engine) -> Board | None:
+        """Updates board"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        board: Board | None = session.get(Board, board_id)
+
+        if board:
+            #  board.text = data.text
+            board.uri = data.uri
+
+            session.add(board)
+            session.commit()
+            session.close()
+
+            return board
+
+        else:
+            raise NotFoundException(f'Board id {board_id} does not exist')
+
+    @delete("/{board_id:int}")
+    async def delete_board(self, board_id: int, db_engine: Engine) -> None:
+        """Deletes board"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        board: Board | None = session.get(Board, board_id)
+
+        if board:
+            session.delete(board)
+            # FIXME: delete posts or only shadow board/posts for non admins
+
+            session.commit()
+            session.close()
+
+            return None
+
+        else:
+            raise NotFoundException(f'Board id {board_id} does not exist')

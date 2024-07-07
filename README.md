@@ -14,6 +14,12 @@ or
 python -m bbs run
 ```
 
+or in debug mode with
+
+```
+LITESTAR_PDB=1 bbs-cli run
+```
+
 ## dev requirements
 
 1. install `direnv`

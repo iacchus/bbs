@@ -65,6 +65,9 @@ class Post(SQLModel, table=True):
 class PostReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id"})
 
+class PostPatchDTO(PydanticDTO[Post]):
+    config: DTOConfig = DTOConfig(exclude={"id", "board_id", "reply_to_id"})
+
 class TopicReceiveDTO(PydanticDTO[Post]):
     config: DTOConfig = DTOConfig(exclude={"id", "reply_to_id"})
     # `reply_to_id` for topics is always `0` (int zero)

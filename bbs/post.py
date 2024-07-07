@@ -2,6 +2,7 @@ from typing import Sequence
 
 from litestar import Controller
 from litestar import get
+from litestar import patch
 from litestar import post
 from litestar.exceptions import NotFoundException
 
@@ -9,6 +10,7 @@ from sqlalchemy import Engine
 from sqlmodel import Session, select
 
 from .models import Post, PostReceiveDTO, PostSendDTO, ReplyReceiveDTO
+from .models import PostPatchDTO
 from .functions import board_id_exists, post_id_exists
 from .functions import get_thread
 
@@ -49,7 +51,7 @@ class PostController(Controller):
             return new_post
 
         else:
-            raise NotFoundException(f'Board id {new_post.board_id} does not exist')
+            raise NotFoundException(f"Board id {new_post.board_id} does not exist")
 
     @post("/{reply_to_id:int}", dto=ReplyReceiveDTO, return_dto=PostSendDTO)
     async def reply_to_post(self, reply_to_id: int, data: Post,
@@ -58,7 +60,11 @@ class PostController(Controller):
 
         session = Session(bind=db_engine, expire_on_commit=False)
 
-        if post_id_exists(db_session=session, post_id=reply_to_id):
+        post: Post | None = session.get(Post, reply_to_id)
+
+        #  if post_id_exists(db_session=session, post_id=reply_to_id):
+        if post:
+
             new_post: Post = data
             new_post.reply_to_id = reply_to_id
             new_post.board_id = 0
@@ -73,3 +79,23 @@ class PostController(Controller):
             raise NotFoundException(f'Post id {reply_to_id} does not exist')
 
 
+    @patch("/{post_id:int}", dto=PostPatchDTO, return_dto=PostSendDTO)
+    async def edit_post(self, post_id: int, data: Post,
+                            db_engine: Engine) -> Post | None:
+        """Updates the post"""
+
+        session = Session(bind=db_engine, expire_on_commit=False)
+
+        post: Post | None = session.get(Post, post_id)
+
+        if post:
+            post.text = data.text
+
+            session.add(post)
+            session.commit()
+            session.close()
+
+            return post
+
+        else:
+            raise NotFoundException(f'Post id {post_id} does not exist')

@@ -10,7 +10,7 @@ def uid_exists(db_session, model,
                unique_id_field, unique_id_value: int | str) -> bool:
 
         statement = \
-            select(model).where(unique_id_field == unique_id_value)
+            select(model).where(unique_id_field == unique_id_value).limit(limit=1)
 
         does_uid_exist: model | None = \
             db_session.exec(statement=statement).first()

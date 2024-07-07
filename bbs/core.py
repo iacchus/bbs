@@ -56,8 +56,6 @@ class BBS:
         self.api = Litestar(route_handlers=route_handlers,
                             dependencies=dependencies,
                             middleware=middleware)
-                            #  middleware=middleware,
-                            #  pdb_on_exception=True)
 
     async def get_uri(self) -> str:
         return self.instance

@@ -8,7 +8,7 @@ import uvicorn
 
 from .core import BBS
 
-#instance_names: list[str] = ["one", "another"]
+#  instance_names: list[str] = ["one", "another"]
 instance_names: list[str] = ["one"]
 
 def app_factory(instance_names: list[str]) -> Starlette:

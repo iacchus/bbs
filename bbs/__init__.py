@@ -31,7 +31,7 @@ def app_factory(instance_names: list[str]) -> Starlette:
 app = app_factory(instance_names=instance_names)
 
 def run_uvicorn():
-    uvicorn.run("bbs:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("bbs:app", host="0.0.0.0", port=8100, reload=True)
 
 
 @click.group()

@@ -26,13 +26,26 @@ LITESTAR_PDB=1 bbs-cli run
 
 2. use the commands:
 
+### uv
+
+```
+git clone git@github.com:iacchus/bbs.git
+cd bbs/
+uv venv .venv
+source .venv/bin/activate
+direnv allow
+uv pip install -e .
+```
+
+### no `uv`
+
 ```
 git clone git@github.com:iacchus/bbs.git
 cd bbs/
 python -m venv .venv
 source .venv/bin/activate
 direnv allow
-python install -e .
+pip install -e .
 ```
 
 3. run as above

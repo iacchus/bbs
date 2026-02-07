@@ -1,3 +1,5 @@
+gitignored/
+
 *.db
 *.sqlite
 *.sqlite3

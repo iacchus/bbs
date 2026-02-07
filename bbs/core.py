@@ -4,9 +4,9 @@ from litestar.middleware.base import DefineMiddleware
 
 from sqlmodel import SQLModel, create_engine
 
-from .site import SiteController
-from .board import BoardController
-from .post import PostController
+#  from .site import SiteController
+#  from .board import BoardController
+#  from .post import PostController
 from .user import UserController
 
 from .authentication import AuthenticationMiddleware
@@ -38,9 +38,9 @@ class BBS:
         }
 
         route_handlers: list = [
-                BoardController,
-                PostController,
-                SiteController,
+                #  BoardController,
+                #  PostController,
+                #  SiteController,
                 UserController
         ]
 

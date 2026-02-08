@@ -7,7 +7,7 @@ from sqlmodel import SQLModel, create_engine
 #  from .site import SiteController
 #  from .board import BoardController
 #  from .post import PostController
-from .user import UserController
+#  from .user import UserController
 
 #  from .authentication import AuthenticationMiddleware
 
@@ -41,7 +41,7 @@ class BBS:
                 #  BoardController,
                 #  PostController,
                 #  SiteController,
-                UserController
+                #  UserController
         ]
 
         #  auth_mw = DefineMiddleware(middleware=AuthenticationMiddleware,

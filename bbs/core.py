@@ -1,6 +1,6 @@
 from litestar import Litestar
 from litestar.di import Provide
-from litestar.middleware.base import DefineMiddleware
+#  from litestar.middleware.base import DefineMiddleware
 
 from sqlmodel import SQLModel, create_engine
 
@@ -9,7 +9,7 @@ from sqlmodel import SQLModel, create_engine
 #  from .post import PostController
 from .user import UserController
 
-from .authentication import AuthenticationMiddleware
+#  from .authentication import AuthenticationMiddleware
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
@@ -44,18 +44,19 @@ class BBS:
                 UserController
         ]
 
-        auth_mw = DefineMiddleware(middleware=AuthenticationMiddleware,
-                                   exclude="schema",
-                                   db_engine=self.engine)
-        self.auth_mw = auth_mw
+        #  auth_mw = DefineMiddleware(middleware=AuthenticationMiddleware,
+        #                             exclude="schema",
+        #                             db_engine=self.engine)
+        #  self.auth_mw = auth_mw
 
-        middleware = [
-                #  self.auth_mw
-        ]
+        #  middleware = [
+        #          #  self.auth_mw
+        #  ]
 
         self.api = Litestar(route_handlers=route_handlers,
                             dependencies=dependencies,
-                            middleware=middleware)
+                            )
+                            #  middleware=middleware)
 
     async def get_uri(self) -> str:
         return self.instance

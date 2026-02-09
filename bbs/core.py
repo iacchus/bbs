@@ -1,6 +1,8 @@
 from litestar import Litestar
 from litestar.di import Provide
-#  from litestar.middleware.base import DefineMiddleware
+#  from litestar.middleware.base import DefineMiddlewareo
+
+from piccolo.engine.sqlite import SQLiteEngine
 
 #  from sqlmodel import SQLModel, create_engine
 
@@ -24,16 +26,12 @@ from .routes import (
 #  from .authentication import AuthenticationMiddleware
 
 #  SQLITE_FILE_NAME = "db-{uri}.sqlite"
+SQLITE_FILE_NAME = "db-{uri}.sqlite"
 #  SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
 # --- 1. Session Configuration (Same as before) ---
 SESSION_SECRET = "super-secret-session-key-123"
 
-
-# --- Lifecycle ---
-async def startup():
-    await User.create_table(if_not_exists=True)
-    await AuthChallenge.create_table(if_not_exists=True)
 
 #  app = Litestar(
 #      route_handlers=[get_challenge, login_handler, user_profile],
@@ -44,9 +42,10 @@ async def startup():
 class BBS:
 
     def __init__(self, instance: str):
-
         self.instance: str = instance
 
+        db_file = SQLITE_FILE_NAME.format(uri=instance)
+        self.engine = SQLiteEngine(path=db_file)
         #  sqlite_file_name: str = SQLITE_FILE_NAME.format(uri=instance)
         #  self.sqlite_file_name: str = sqlite_file_name
 
@@ -60,8 +59,14 @@ class BBS:
 
         dependencies: dict[str, Provide] = {
             'site_uri': Provide(self.get_uri),
-            #  'db_engine': Provide(self.get_db_engine)
+            'db_engine': Provide(self.get_db_engine)
         }
+
+        async def on_startup():
+            await User.create_table(if_not_exists=True,
+                                    engine=self.engine)
+            await AuthChallenge.create_table(if_not_exists=True,
+                                             engine=self.engine)
 
         route_handlers: list = [
                 request_challenge,
@@ -83,7 +88,7 @@ class BBS:
         #  ]
 
         self.api = Litestar(route_handlers=route_handlers,
-                            on_startup=[startup],
+                            on_startup=[on_startup],
                             dependencies=dependencies,
                             on_app_init=[jwt_cookie_auth.on_app_init],
                             debug=True
@@ -93,5 +98,5 @@ class BBS:
     async def get_uri(self) -> str:
         return self.instance
 
-    #  async def get_db_engine(self):
-    #      return self.engine
+    async def get_db_engine(self):
+        return self.engine

@@ -1,5 +1,6 @@
 import secrets
-import time
+#  import time
+from typing import Any
 
 from litestar import (
         get,
@@ -16,6 +17,7 @@ from litestar.status_codes import HTTP_401_UNAUTHORIZED
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
+from piccolo.engine.sqlite import SQLiteEngine
 from pydantic import BaseModel
 
 from .tables import User, AuthChallenge, db
@@ -31,19 +33,21 @@ async def retrieve_user_handler(token: "Token", connection: "ASGIConnection") ->
 jwt_cookie_auth = JWTCookieAuth[User](
     retrieve_user_handler=retrieve_user_handler,
     token_secret=SESSION_SECRET,
-    exclude=["/request_challenge", "register"], 
+    exclude=["/request_challenge", "/register"], 
     #  exclude=["/auth/challenge", "/auth/login"],
 )
 
 
 @get("/request_challenge/{public_key:str}")
-async def request_challenge(public_key: str) -> dict[str, str]:
+async def request_challenge(public_key: str,
+                            db_engine: SQLiteEngine
+                            ) -> dict[str, str]:
 
     nonce = secrets.token_hex(32)
 
     await AuthChallenge.insert(
             AuthChallenge(public_key=public_key, nonce=nonce)
-            )
+            ).run(engine=db_engine)
 
     return {"nonce": nonce}
 
@@ -53,13 +57,18 @@ class RegisterData(BaseModel):
 
 
 @post("/register")
-async def register(data: RegisterData) -> Response:
+async def register(data: RegisterData, 
+                   db_engine: SQLiteEngine
+                   ) -> Response:
+
     challenge = await AuthChallenge.objects().where(
             AuthChallenge.public_key == data.public_key
-            ).order_by(AuthChallenge.created_at, ascending=False).first()
+            ).order_by(
+                    AuthChallenge.created_at, ascending=False
+                    ).first().run(engine=db_engine)
 
     if not challenge:
-        raise NotFoundException
+        raise NotFoundException("Challenge not found")
 
 # 2. Verify Cryptography
     try:
@@ -82,7 +91,7 @@ async def register(data: RegisterData) -> Response:
     user = await User.objects().get(User.public_key == data.public_key)
     if not user:
         user = User(public_key=data.public_key)
-        await user.save()
+        await user.save().run(engine=db_engine)
 
     # 5. Issue Session Cookie
     response = jwt_cookie_auth.login(identifier=user.public_key)
@@ -90,5 +99,7 @@ async def register(data: RegisterData) -> Response:
 
 
 @get("/me")
-async def user_profile(request: Request[User, "Any", "Any"]) -> dict[str, str]:
-    return {"my_public_key": request.user.public_key}
+async def user_profile(request: Request[User, Any, Any],
+                       db_engine: SQLiteEngine) -> dict[str, str]:
+    return {"my_public_key": request.user.public_key,
+            "current_db": db_engine.config.get("path")}

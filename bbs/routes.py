@@ -4,19 +4,21 @@ import time
 from litestar import (
         get,
         post,
-        Response
+        Request,
+        Response,
         )
 
 from litestar.exceptions import NotAuthorizedException, NotFoundException
 
 from litestar.security.jwt import JWTCookieAuth
+from litestar.status_codes import HTTP_401_UNAUTHORIZED
 
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
 from pydantic import BaseModel
 
-from tables import User, AuthChallenge, db
+from .tables import User, AuthChallenge, db
 
 SESSION_SECRET = "uhuhu"
 
@@ -29,7 +31,8 @@ async def retrieve_user_handler(token: "Token", connection: "ASGIConnection") ->
 jwt_cookie_auth = JWTCookieAuth[User](
     retrieve_user_handler=retrieve_user_handler,
     token_secret=SESSION_SECRET,
-    exclude=["/auth/challenge", "/auth/login"], 
+    exclude=["/request_challenge", "register"], 
+    #  exclude=["/auth/challenge", "/auth/login"],
 )
 
 
@@ -84,3 +87,7 @@ async def register(data: RegisterData) -> Response:
     # 5. Issue Session Cookie
     response = jwt_cookie_auth.login(identifier=user.public_key)
     return Response(content={"message": "Logged in!", "user": user.public_key}, cookies=response.cookies)
+
+@get("/me")
+async def user_profile(request: Request[User, "Any", "Any"]) -> dict[str, str]:
+    return {"my_public_key": request.user.public_key}

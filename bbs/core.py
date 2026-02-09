@@ -10,8 +10,12 @@ from sqlmodel import SQLModel, create_engine
 #  from .user import UserController
 
 from .routes import (
+        User,
+        AuthChallenge,
         request_challenge,
-        register
+        register,
+        user_profile,
+        jwt_cookie_auth,
         )
 
 #  from .authentication import AuthenticationMiddleware
@@ -22,6 +26,17 @@ SQLITE_URL = "sqlite:///{sqlite_file_name}"
 # --- 1. Session Configuration (Same as before) ---
 SESSION_SECRET = "super-secret-session-key-123"
 
+
+# --- Lifecycle ---
+async def startup():
+    await User.create_table(if_not_exists=True)
+    await AuthChallenge.create_table(if_not_exists=True)
+
+#  app = Litestar(
+#      route_handlers=[get_challenge, login_handler, user_profile],
+#      on_startup=[startup],
+#      on_app_init=[jwt_cookie_auth.on_app_init]
+#  )
 
 class BBS:
 
@@ -47,7 +62,8 @@ class BBS:
 
         route_handlers: list = [
                 request_challenge,
-                register
+                register,
+                user_profile,
                 #  BoardController,
                 #  PostController,
                 #  SiteController,
@@ -64,7 +80,9 @@ class BBS:
         #  ]
 
         self.api = Litestar(route_handlers=route_handlers,
+                            on_startup=[startup],
                             dependencies=dependencies,
+                            on_app_init=[jwt_cookie_auth.on_app_init]
                             )
                             #  middleware=middleware)
 

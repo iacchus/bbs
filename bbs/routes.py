@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from .tables import User, AuthChallenge, db
 
-SESSION_SECRET = "uhuhu"
+SESSION_SECRET = "uh6yhgvcrddrrfgtg6thhu8uu8u878h8huhuhu"
 
 
 async def retrieve_user_handler(token: "Token", connection: "ASGIConnection") -> User | None:
@@ -87,6 +87,7 @@ async def register(data: RegisterData) -> Response:
     # 5. Issue Session Cookie
     response = jwt_cookie_auth.login(identifier=user.public_key)
     return Response(content={"message": "Logged in!", "user": user.public_key}, cookies=response.cookies)
+
 
 @get("/me")
 async def user_profile(request: Request[User, "Any", "Any"]) -> dict[str, str]:

@@ -9,10 +9,18 @@ from sqlmodel import SQLModel, create_engine
 #  from .post import PostController
 #  from .user import UserController
 
+from .routes import (
+        request_challenge,
+        register
+        )
+
 #  from .authentication import AuthenticationMiddleware
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_URL = "sqlite:///{sqlite_file_name}"
+
+# --- 1. Session Configuration (Same as before) ---
+SESSION_SECRET = "super-secret-session-key-123"
 
 
 class BBS:
@@ -38,6 +46,8 @@ class BBS:
         }
 
         route_handlers: list = [
+                request_challenge,
+                register
                 #  BoardController,
                 #  PostController,
                 #  SiteController,

@@ -1,5 +1,5 @@
 from piccolo.table import Table
-from piccolo.columns import Varchar, Timestamp, Text
+from piccolo.columns import Varchar, Timestamp, Text, Serial
 from piccolo.engine.sqlite import SQLiteEngine
 import datetime
 
@@ -13,6 +13,7 @@ class User(Table, db=db):
 
 class AuthChallenge(Table, db=db):
     """Stores temporary nonces to prevent replay attacks."""
+    id = Serial(primary_key=True)
     public_key = Varchar(length=64)
     nonce = Varchar(length=64) # The random string they must sign
     created_at = Timestamp(default=datetime.datetime.now)

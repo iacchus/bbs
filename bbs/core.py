@@ -63,8 +63,6 @@ class UserController(Controller):
 
         nonce = secrets.token_hex(32)
 
-        #  bbs.AuthChallenge._meta.db = db_engine
-
         await bbs.AuthChallenge.insert(
                 bbs.AuthChallenge(public_key=public_key, nonce=nonce),
                 )
@@ -101,7 +99,7 @@ class BBS:
 
         self.User = User
         self.AuthChallenge = AuthChallenge
-        #  self.AuthChallenge._meta.db = self.engine
+
         create_db_tables_sync(self.User, if_not_exists=True)
         create_db_tables_sync(self.AuthChallenge, if_not_exists=True)
 
@@ -110,24 +108,18 @@ class BBS:
                 UserController,
         ]
 
-        #  async def on_startup():
-        #      await User.create_table(if_not_exists=True)
-        #      await AuthChallenge.create_table(if_not_exists=True)
-        #      #  await self.User.create_table(if_not_exists=True)
-        #      #  await self.AuthChallenge.create_table(if_not_exists=True)
+        #  def on_startup():
+        #      User.create_table(if_not_exists=True)
+        #      AuthChallenge.create_table(if_not_exists=True)
 
         self.api = Litestar(
                 route_handlers=route_handlers,
                 #  on_startup=[self.on_startup],
+                #  on_startup=[on_startup],
                 dependencies=dependencies,
                 #  on_app_init=[jwt_cookie_auth.on_app_init],
                 debug=True
         )
-
-    #  def on_startup(self):
-    #      #  create_db_tables_sync(self.User, if_not_exists=True)
-    #      pass
-
 
     async def get_self(self):
         return self

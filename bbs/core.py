@@ -32,57 +32,9 @@ from nacl.exceptions import BadSignatureError
 from piccolo.engine.sqlite import SQLiteEngine
 from pydantic import BaseModel
 
-#  from .tables import User, AuthChallenge, db
-
-#  from sqlmodel import SQLModel, create_engine
-
-#  from .site import SiteController
-#  from .board import BoardController
-#  from .post import PostController
-#  from .user import UserController
-
-#  from .tables import (
-#          User,
-#          AuthChallenge,
-#          )
-
-#  from .routes import (
-#          request_challenge,
-#          register,
-#          user_profile,
-#          jwt_cookie_auth,
-#          )
-
-#  from .authentication import AuthenticationMiddleware
-
-#  SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
-#  SQLITE_URL = "sqlite:///{sqlite_file_name}"
 
-# --- 1. Session Configuration (Same as before) ---
 SESSION_SECRET = "super-secret-session-key-123"
-
-
-
-
-#  DB_FILE = "whaT.sqlite"
-#  db = SQLiteEngine(path=DB_FILE)
-
-class User(Table, db=db):
-    # The Public Key (in Hex format) is the unique ID
-    public_key = Varchar(length=64, unique=True, primary_key=True)
-    username = Varchar(length=50, null=True) # Optional display name
-
-class AuthChallenge(Table, db=db):
-    """Stores temporary nonces to prevent replay attacks."""
-    id = Serial(primary_key=True)
-    public_key = Varchar(length=64)
-    nonce = Varchar(length=64) # The random string they must sign
-    created_at = Timestamp(default=datetime.datetime.now)
-
-
-
-SESSION_SECRET = "uh6yhgvcrddrrfgtg6thhu8uu8u878h8huhuhu"
 
 
 #  async def retrieve_user_handler(token: "Token", connection: "ASGIConnection") -> User | None:
@@ -97,73 +49,71 @@ SESSION_SECRET = "uh6yhgvcrddrrfgtg6thhu8uu8u878h8huhuhu"
 #      #  exclude=["/auth/challenge", "/auth/login"],
 #  )
 
+class UserController(Controller):
 
-@get("/request_challenge/{public_key:str}")
-async def request_challenge(public_key: str,
-                            db_engine: SQLiteEngine
-                            ) -> dict[str, str]:
+    path = "/user"
 
-    nonce = secrets.token_hex(32)
+    @get("/request_challenge/{public_key:str}")
+    async def request_challenge(self, public_key: str,
+                                db_engine: SQLiteEngine
+                                ) -> dict[str, str]:
 
-    await AuthChallenge.insert(
-            AuthChallenge(public_key=public_key, nonce=nonce)
-            ).run()
+        nonce = secrets.token_hex(32)
 
-    return {"nonce": nonce}
+        #  await AuthChallenge.insert(
+        #          AuthChallenge(public_key=public_key, nonce=nonce)
+        #          ).run()
 
-class RegisterData(BaseModel):
-    public_key: str
-    signature: str
+        return {"nonce": nonce}
 
+    #  class RegisterData(BaseModel):
+    #      public_key: str
+    #      signature: str
+    #
+    #  @post("/register")
+    #  async def register(self,
+    #                     data: RegisterData,
+    #                     db_engine: SQLiteEngine
+    #                     ) -> Response:
+    #
+    #      challenge = await AuthChallenge.objects().where(
+    #              AuthChallenge.public_key == data.public_key
+    #              ).order_by(
+    #                      AuthChallenge.created_at, ascending=False
+    #                      ).first().run()
+    #
+    #      if not challenge:
+    #          raise NotFoundException("Challenge not found")
+    #
+    #  # 2. Verify Cryptography
+    #      try:
+    #          # Convert hex strings back to bytes
+    #          verify_key_bytes = bytes.fromhex(data.public_key)
+    #          signature_bytes = bytes.fromhex(data.signature)
+    #          message_bytes = challenge.nonce.encode('utf-8') # The nonce is the message
+    #
+    #          # Verify using PyNaCl
+    #          verify_key = VerifyKey(verify_key_bytes)
+    #          verify_key.verify(message_bytes, signature_bytes)
+    #
+    #      except (BadSignatureError, ValueError):
+    #          raise NotAuthorizedException("Invalid Signature")
+    #
+    #      # 3. Cleanup: Delete the used challenge (Prevent Replay Attacks)
+    #      await AuthChallenge.delete().where(AuthChallenge.id == challenge.id)
+    #
+    #      # 4. Check if User exists, if not, Register them automatically!
+    #      user = await User.objects().get(User.public_key == data.public_key)
+    #      if not user:
+    #          user = User(public_key=data.public_key)
+    #          await user.save().run()
+    #
+    #      # 5. Issue Session Cookie
+    #      #  response = jwt_cookie_auth.login(identifier=user.public_key)
+    #      return Response(content={"message": "Logged in!", "user": user.public_key})
+    #      #  return Response(content={"message": "Logged in!", "user": user.public_key}, cookies=response.cookies)
+    #
 
-@post("/register")
-async def register(data: RegisterData,
-                   db_engine: SQLiteEngine
-                   ) -> Response:
-
-    challenge = await AuthChallenge.objects().where(
-            AuthChallenge.public_key == data.public_key
-            ).order_by(
-                    AuthChallenge.created_at, ascending=False
-                    ).first().run()
-
-    if not challenge:
-        raise NotFoundException("Challenge not found")
-
-# 2. Verify Cryptography
-    try:
-        # Convert hex strings back to bytes
-        verify_key_bytes = bytes.fromhex(data.public_key)
-        signature_bytes = bytes.fromhex(data.signature)
-        message_bytes = challenge.nonce.encode('utf-8') # The nonce is the message
-
-        # Verify using PyNaCl
-        verify_key = VerifyKey(verify_key_bytes)
-        verify_key.verify(message_bytes, signature_bytes)
-
-    except (BadSignatureError, ValueError):
-        raise NotAuthorizedException("Invalid Signature")
-
-    # 3. Cleanup: Delete the used challenge (Prevent Replay Attacks)
-    await AuthChallenge.delete().where(AuthChallenge.id == challenge.id)
-
-    # 4. Check if User exists, if not, Register them automatically!
-    user = await User.objects().get(User.public_key == data.public_key)
-    if not user:
-        user = User(public_key=data.public_key)
-        await user.save().run()
-
-    # 5. Issue Session Cookie
-    #  response = jwt_cookie_auth.login(identifier=user.public_key)
-    return Response(content={"message": "Logged in!", "user": user.public_key})
-    return Response(content={"message": "Logged in!", "user": user.public_key}, cookies=response.cookies)
-
-
-#  @get("/me")
-#  async def user_profile(request: Request[User, Any, Any],
-#                         db_engine: SQLiteEngine) -> dict[str, str]:
-#      return {"my_public_key": request.user.public_key,
-#              "current_db": db_engine.config.get("path")}
 
 
 class BBS:
@@ -213,8 +163,9 @@ class BBS:
             #                                   engine=self.engine)
 
         route_handlers: list = [
-                request_challenge,
-                register,
+                UserController,
+                #  request_challenge,
+                #  register,
                 #  user_profile,
                 #  BoardController,
                 #  PostController,
@@ -231,12 +182,13 @@ class BBS:
         #          #  self.auth_mw
         #  ]
 
-        self.api = Litestar(route_handlers=route_handlers,
-                            on_startup=[on_startup],
-                            dependencies=dependencies,
-                            on_app_init=[jwt_cookie_auth.on_app_init],
-                            debug=True
-                            )
+        self.api = Litestar(
+                route_handlers=route_handlers,
+                on_startup=[on_startup],
+                dependencies=dependencies,
+                #  on_app_init=[jwt_cookie_auth.on_app_init],
+                debug=True
+        )
                             #  middleware=middleware)
 
     async def get_uri(self) -> str:

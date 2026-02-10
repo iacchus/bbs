@@ -8,7 +8,7 @@ from litestar.di import Provide
 
 from piccolo.engine.sqlite import SQLiteEngine
 
-from piccolo.table import Table
+from piccolo.table import Table, create_db_tables_sync
 from piccolo.table import create_db_tables
 from piccolo.columns import Varchar, Timestamp, Text, Serial
 from piccolo.engine.sqlite import SQLiteEngine
@@ -124,6 +124,8 @@ class BBS:
 
         #  self.User = User
         self.AuthChallenge = AuthChallenge
+        #  self.AuthChallenge._meta.db = self.engine
+        create_db_tables_sync(self.AuthChallenge, if_not_exists=True)
 
 
         route_handlers: list = [

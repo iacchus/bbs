@@ -50,18 +50,18 @@ SESSION_SECRET = "super-secret-session-key-123"
 #  )
 
 #  class User(Table, db=self.engine):
-#  class User(Table):
-#      # The Public Key (in Hex format) is the unique ID
-#      public_key = Varchar(length=64, unique=True, primary_key=True)
-#      username = Varchar(length=50, null=True) # Optional display name
-#
-#  #  class AuthChallenge(Table, db=self.engine):
-#  class AuthChallenge(Table):
-#      """Stores temporary nonces to prevent replay attacks."""
-#      id = Serial(primary_key=True)
-#      public_key = Varchar(length=64)
-#      nonce = Varchar(length=64) # The random string they must sign
-#      created_at = Timestamp(default=datetime.datetime.now)
+class User(Table):
+    # The Public Key (in Hex format) is the unique ID
+    public_key = Varchar(length=64, unique=True, primary_key=True)
+    username = Varchar(length=50, null=True) # Optional display name
+
+#  class AuthChallenge(Table, db=self.engine):
+class AuthChallenge(Table):
+    """Stores temporary nonces to prevent replay attacks."""
+    id = Serial(primary_key=True)
+    public_key = Varchar(length=64)
+    nonce = Varchar(length=64) # The random string they must sign
+    created_at = Timestamp(default=datetime.datetime.now)
 
 class UserController(Controller):
 
@@ -77,9 +77,9 @@ class UserController(Controller):
 
         #  bbs.AuthChallenge._meta.db = db_engine
 
-        await bbs.AuthChallenge.insert(
-                bbs.AuthChallenge(public_key=public_key, nonce=nonce)
-                ).run()
+        #  await bbs.AuthChallenge.insert(
+        #          bbs.AuthChallenge(public_key=public_key, nonce=nonce)
+        #          )
 
         return {"nonce": nonce}
 
@@ -139,24 +139,28 @@ class BBS:
         self.instance: str = instance
 
         db_file = SQLITE_FILE_NAME.format(uri=instance)
-        self.engine = SQLiteEngine(path=db_file)
+        self.db_file = db_file
+        self.engine = SQLiteEngine(path=self.db_file)
 
         #  class User(Table, db=db):
+        #  class User(Table):
         #  class User(Table, db=self.engine):
-        class User(Table):
-            public_key = Varchar(length=64, unique=True, primary_key=True)
-            username = Varchar(length=50, null=True) # Optional display name
-
+        #      public_key = Varchar(length=64, unique=True, primary_key=True)
+        #      username = Varchar(length=50, null=True) # Optional display name
+        #
+        #  #  class AuthChallenge(Table):
         #  class AuthChallenge(Table, db=self.engine):
-        class AuthChallenge(Table):
-            """Stores temporary nonces to prevent replay attacks."""
-            id = Serial(primary_key=True)
-            public_key = Varchar(length=64)
-            nonce = Varchar(length=64) # The random string they must sign
-            created_at = Timestamp(default=datetime.datetime.now)
+        #      """Stores temporary nonces to prevent replay attacks."""
+        #      id = Serial(primary_key=True)
+        #      public_key = Varchar(length=64)
+        #      nonce = Varchar(length=64) # The random string they must sign
+        #      created_at = Timestamp(default=datetime.datetime.now)
 
         User._meta.db = self.engine
         AuthChallenge._meta.db = self.engine
+
+        #  User.create_table()
+        #  AuthChallenge.create_table()
 
         dependencies: dict[str, Provide] = {
             'site_uri': Provide(self.get_uri),
@@ -183,15 +187,15 @@ class BBS:
         #  middleware = [
         #          #  self.auth_mw
         #  ]
-        async def on_startup():
-            await User.create_table(if_not_exists=True)
-            await AuthChallenge.create_table(if_not_exists=True)
-            #  await self.User.create_table(if_not_exists=True)
-            #  await self.AuthChallenge.create_table(if_not_exists=True)
+        #  async def on_startup():
+        #      await User.create_table(if_not_exists=True)
+        #      await AuthChallenge.create_table(if_not_exists=True)
+        #      #  await self.User.create_table(if_not_exists=True)
+        #      #  await self.AuthChallenge.create_table(if_not_exists=True)
 
         self.api = Litestar(
                 route_handlers=route_handlers,
-                on_startup=[on_startup],
+                on_startup=[self.on_startup],
                 dependencies=dependencies,
                 #  on_app_init=[jwt_cookie_auth.on_app_init],
                 debug=True
@@ -199,7 +203,7 @@ class BBS:
                             #  middleware=middleware)
 
     async def on_startup(self):
-        await self.User.create_table(if_not_exists=True)
+        await self.User.create_table(if_not_exists=True, db=self.engine)
         await self.AuthChallenge.create_table(if_not_exists=True)
         #  await User.create_table(if_not_exists=True,
         #                          engine=self.engine)

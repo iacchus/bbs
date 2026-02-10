@@ -140,31 +140,23 @@ class BBS:
 
         db_file = SQLITE_FILE_NAME.format(uri=instance)
         self.engine = SQLiteEngine(path=db_file)
-        #  sqlite_file_name: str = SQLITE_FILE_NAME.format(uri=instance)
-        #  self.sqlite_file_name: str = sqlite_file_name
 
-        #  sqlite_url: str = SQLITE_URL.format(sqlite_file_name=sqlite_file_name)
-        #  self.sqlite_url: str = sqlite_url
-
-        #  engine = create_engine(url=sqlite_url, echo=True)
-        #  self.engine = engine
-
-        #  SQLModel.metadata.create_all(engine)
         #  class User(Table, db=db):
-        class User(Table, db=self.engine):
-            # The Public Key (in Hex format) is the unique ID
+        #  class User(Table, db=self.engine):
+        class User(Table):
             public_key = Varchar(length=64, unique=True, primary_key=True)
             username = Varchar(length=50, null=True) # Optional display name
 
-        class AuthChallenge(Table, db=self.engine):
+        #  class AuthChallenge(Table, db=self.engine):
+        class AuthChallenge(Table):
             """Stores temporary nonces to prevent replay attacks."""
             id = Serial(primary_key=True)
             public_key = Varchar(length=64)
             nonce = Varchar(length=64) # The random string they must sign
             created_at = Timestamp(default=datetime.datetime.now)
 
-        #  User._meta.db = self.engine
-        #  AuthChallenge._meta.db = self.engine
+        User._meta.db = self.engine
+        AuthChallenge._meta.db = self.engine
 
         dependencies: dict[str, Provide] = {
             'site_uri': Provide(self.get_uri),

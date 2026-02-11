@@ -142,6 +142,8 @@ class UserController(Controller):
     async def user_profile(self, request: Request,
                        db_engine: SQLiteEngine,
                            bbs: "BBS") -> dict[str, str]:
+        #  return {"my_public_key": request.user.public_key,
+        print(dir(request.user))
         return {"my_public_key": request.user.public_key,
             "current_db": bbs.engine.config.get("path")}
 

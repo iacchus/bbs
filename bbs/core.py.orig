@@ -138,6 +138,22 @@ class UserController(Controller):
             user = User(public_key=data.public_key)
             await user.save()
 
+<<<<<<< HEAD
+        #  async def retrieve_user_handler(token: "Token",
+        #                                  connection: "ASGIConnection") -> User | None:
+        #      # 'token.sub' is now the public_key
+        #      return await User.objects().get(User.public_key == token.sub)
+
+
+        #  jwt_cookie_auth = JWTCookieAuth[User](
+        #      retrieve_user_handler=retrieve_user_handler,
+        #      token_secret=SESSION_SECRET,
+        #      exclude=["/request_challenge", "/register", "/me"],
+        #      #  exclude=["/auth/challenge", "/auth/login"],
+        #  )
+
+=======
+>>>>>>> setup-jwt-auth-12250682328088695021
         # 5. Issue Session Cookie
         response = bbs.jwt_cookie_auth.login(identifier=user.public_key)
         return Response(content={"message": "Logged in!",
@@ -147,6 +163,22 @@ class UserController(Controller):
 
     #  @get("/me")
     #  async def user_profile(self, request: Request["User", Any, Any],
+<<<<<<< HEAD
+    #  async def user_profile(self, request: Request,
+    #  async def user_profile(self, request: User,
+    #  async def user_profile(self, request: LoginPayload,
+    #                     db_engine: SQLiteEngine,
+    #                         bbs: "BBS") -> dict[str, str]:
+    #      print(dir(request))yy
+    #      #  return {"my_public_key": request.user.public_key,
+    #      return {"my_public_key": request.user.public_key,
+    #          "current_db": bbs.engine.config.get("path")}
+    @get("/me")
+    async def user_profile(self, request: "Request[LoginPayload, Token, Any]") -> dict[str, str]:
+    #  async def user_profile(self, request: "Request[User, Token, Any]") -> dict[str, str]:
+        print(dir(request))
+        return {"my_public_key": request.user.public_key}
+=======
     async def user_profile(self, request: Request,
                        db_engine: SQLiteEngine,
                            bbs: "BBS") -> dict[str, str]:
@@ -154,6 +186,7 @@ class UserController(Controller):
         # print(dir(request.user))
         return {"my_public_key": request.user.public_key,
             "current_db": bbs.instance}
+>>>>>>> setup-jwt-auth-12250682328088695021
 
 class BBS:
 

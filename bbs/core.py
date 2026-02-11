@@ -145,7 +145,7 @@ class UserController(Controller):
                         cookies=response.cookies)
 
 
-    #  @get("/me")
+    @get("/me")
     #  async def user_profile(self, request: Request["User", Any, Any],
     async def user_profile(self, request: Request,
                        db_engine: SQLiteEngine,

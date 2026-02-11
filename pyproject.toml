@@ -8,6 +8,8 @@ version = "0.0.1"
 dependencies = [
   "click",
   "litestar",
+  "piccolo",
+  "pynacl",
   "pyjwt",
   "python-jose",
   "sqlmodel",

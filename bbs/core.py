@@ -24,7 +24,7 @@ from litestar import (
 
 from litestar.exceptions import NotAuthorizedException, NotFoundException
 
-from litestar.security.jwt import JWTCookieAuth
+from litestar.security.jwt import JWTCookieAuth, Token
 from litestar.status_codes import HTTP_401_UNAUTHORIZED
 
 from nacl.signing import VerifyKey
@@ -53,6 +53,26 @@ SESSION_SECRET = "super-secret-session-key-123"
 class LoginPayload(BaseModel):
     public_key: str
     signature: str # Hex encoded signature
+
+#  async def retrieve_user_handler(token: "Token",
+#                                  connection: "ASGIConnection",
+#                                  bbs: "BBS"
+#                                 ) -> "User | None":
+#                                  #  bbs: "BBS") -> User | None:
+#      # 'token.sub' is now the public_key
+#      #  bbs = connection.app
+#      #  User = connection.app.User
+#      User = bbs.User
+#      return await User.objects().get(User.public_key == token.sub)
+
+#  #  jwt_cookie_auth = JWTCookieAuth[User](
+#  jwt_cookie_auth = JWTCookieAuth[LoginPayload](
+#      retrieve_user_handler=retrieve_user_handler,
+#      token_secret=SESSION_SECRET,
+#      exclude=["/request_challenge", "/register"],
+#      #  exclude=["/auth/challenge", "/auth/login"],
+#  )
+
 
 class UserController(Controller):
 
@@ -117,35 +137,42 @@ class UserController(Controller):
             user = User(public_key=data.public_key)
             await user.save()
 
-        async def retrieve_user_handler(token: "Token",
-                                        connection: "ASGIConnection") -> User | None:
-            # 'token.sub' is now the public_key
-            return await User.objects().get(User.public_key == token.sub)
+        #  async def retrieve_user_handler(token: "Token",
+        #                                  connection: "ASGIConnection") -> User | None:
+        #      # 'token.sub' is now the public_key
+        #      return await User.objects().get(User.public_key == token.sub)
 
 
-        jwt_cookie_auth = JWTCookieAuth[User](
-            retrieve_user_handler=retrieve_user_handler,
-            token_secret=SESSION_SECRET,
-            exclude=["/request_challenge", "/register"],
-            #  exclude=["/auth/challenge", "/auth/login"],
-        )
+        #  jwt_cookie_auth = JWTCookieAuth[User](
+        #      retrieve_user_handler=retrieve_user_handler,
+        #      token_secret=SESSION_SECRET,
+        #      exclude=["/request_challenge", "/register", "/me"],
+        #      #  exclude=["/auth/challenge", "/auth/login"],
+        #  )
 
         # 5. Issue Session Cookie
-        response = jwt_cookie_auth.login(identifier=user.public_key)
+        response = bbs.jwt_cookie_auth.login(identifier=user.public_key)
         return Response(content={"message": "Logged in!",
                                  "user": user.public_key},
                         cookies=response.cookies)
 
 
-    @get("/me")
+    #  @get("/me")
     #  async def user_profile(self, request: Request["User", Any, Any],
-    async def user_profile(self, request: Request,
-                       db_engine: SQLiteEngine,
-                           bbs: "BBS") -> dict[str, str]:
-        #  return {"my_public_key": request.user.public_key,
-        print(dir(request.user))
-        return {"my_public_key": request.user.public_key,
-            "current_db": bbs.engine.config.get("path")}
+    #  async def user_profile(self, request: Request,
+    #  async def user_profile(self, request: User,
+    #  async def user_profile(self, request: LoginPayload,
+    #                     db_engine: SQLiteEngine,
+    #                         bbs: "BBS") -> dict[str, str]:
+    #      print(dir(request))yy
+    #      #  return {"my_public_key": request.user.public_key,
+    #      return {"my_public_key": request.user.public_key,
+    #          "current_db": bbs.engine.config.get("path")}
+    @get("/me")
+    async def user_profile(self, request: "Request[LoginPayload, Token, Any]") -> dict[str, str]:
+    #  async def user_profile(self, request: "Request[User, Token, Any]") -> dict[str, str]:
+        print(dir(request))
+        return {"my_public_key": request.user.public_key}
 
 class BBS:
 
@@ -179,6 +206,23 @@ class BBS:
         create_db_tables_sync(self.User, if_not_exists=True)
         create_db_tables_sync(self.AuthChallenge, if_not_exists=True)
 
+        #  async def retrieve_user_handler(token: "Token",
+        def retrieve_user_handler(token: "Token",
+                                        connection: "ASGIConnection") -> User | None:
+            # 'token.sub' is now the public_key
+            #  return await User.objects().get(User.public_key == token.sub)
+            return User.objects().get(User.public_key == token.sub)
+
+
+        jwt_cookie_auth = JWTCookieAuth[User](
+            retrieve_user_handler=retrieve_user_handler,
+            token_secret=SESSION_SECRET,
+            exclude=["/request_challenge", "/register", "/me"],
+            #  exclude=["/auth/challenge", "/auth/login"],
+        )
+
+        self.retrieve_user_handler = retrieve_user_handler
+        self.jwt_cookie_auth = jwt_cookie_auth
 
         route_handlers: list = [
                 UserController,
@@ -193,7 +237,7 @@ class BBS:
                 #  on_startup=[self.on_startup],
                 #  on_startup=[on_startup],
                 dependencies=dependencies,
-                #  on_app_init=[jwt_cookie_auth.on_app_init],
+                on_app_init=[self.jwt_cookie_auth.on_app_init],
                 debug=True
         )
 

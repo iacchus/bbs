@@ -94,6 +94,19 @@ be valid for "opening posts" as well as for "replies" (comments or
 The `post` component is also common to any forum: it is a opening post with its
 replies, comments.
 
+##### `post_item`
+
+Any opening post or reply item.
+
+An opening post has the database column `reply_to` set to 0, while the reply
+has the column `reply_to` set to parent post `id`. Maybe the name of this
+column should be changed.
+
+##### `user`
+
+A user is represented by a registered public key, which registered by replying
+correctly signing a Challenge-Response test providaded by the server (`site`).
+
 ### API Endpoints
 
 Endpoints can somewhat reflect the user experience in bbs-client :) 
@@ -107,19 +120,6 @@ We need to think in better names for some (or all) of these:
 * post
 * item
 * user
-
-##### `post_item`
-
-Any opening post or reply item.
-
-An opening post has the database column `reply_to` set to 0, while the reply
-has the column `reply_to` set to parent post `id`. Maybe the name of this
-column should be changed.
-
-##### `user`
-
-A user is represented by a registered public key, which registered by replying
-correctly signing a Challenge-Response test providaded by the server (`site`).
 
 #### API Endpoints Longer Description...
 

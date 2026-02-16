@@ -60,24 +60,30 @@ Any server can run:
 1. one site only
 2. multiple sites
 
+As an example of multiple sites, this is like Stack Exchange which has various
+sites, about different subjects, "buddhism", "vim" etc, that are independent
+from each other.)
+
 ##### `site` or `sites`
 
-A site is an instance of `BBS` class.
+A `site` is an instance of `BBS` class.
 
 About the number of sites a server has:
 
-1. If a server has only one site, that instance is mounted at its root path,
-  `/`, for example, at `https://<SERVER_ADDRESS>:<SERVER_PORT>/`.
-2. If a server has two or more sites, let's call them, as an example, with
+1. If a `server` has only one `site`, that instance is mounted at its root
+  path, `/`, for example, at `https://<SERVER_ADDRESS>:<SERVER_PORT>/`.
+2. If a `server` has two or more `site`s, let's call them, as an example, by
   uris "site1" and "anothersite", they will be mounted at:
   * "site1" will be mounted at: `https://<SERVER_ADDRESS>:<SERVER_PORT>/site1/`
-  * "anothersite" will be mounted at: `https://<SERVER_ADDRESS>:<SERVER_PORT>/anothersite/`
-  Each will run it's own, independent instance, but in the same server.
-  Each one is an independent bbs/forum site.
+  * "anothersite" will be mounted at:
+    `https://<SERVER_ADDRESS>:<SERVER_PORT>/anothersite/`
+  Each will run it's own, independent, `BBS` instance, but in the same
+  `server`.
+  Each one is an independent bbs/forum/`site`.
 
 ##### `boards`
 
-boards is the home of a site. Just like in any common forum, it lists the
+`boards` is the home of a `site`. Just like in any common forum, it lists the
 boards existing on that site/bbs/forum.
 
 ##### `board`
@@ -104,8 +110,9 @@ column should be changed.
 
 ##### `user`
 
-A user is represented by a registered public key, which registered by replying
-correctly signing a Challenge-Response test providaded by the server (`site`).
+A `user` is represented by a registered public key, which registered by
+replying correctly signing a Challenge-Response test providaded by the server
+(`site`).
 
 ### API Endpoints
 
@@ -113,35 +120,25 @@ Endpoints can somewhat reflect the user experience in bbs-client :)
 
 We need to think in better names for some (or all) of these:
 
-* login/register
-* sites - server; if server has more than 1 site (as an example, this is like Stack Exchange which has various sites, about different subjects, "buddhism", "vim" etc.) This is disabled if the server has only 1 site.
-* boards - list of boards inside a site,
+* sites 
+* boards
 * board
 * post
 * item
 * user
+* login/register
 
 #### API Endpoints Longer Description...
 
 ... and further conceptual development
 
-After the user connected to a server the first time and have credentials and
-a server registered locally, it will automatically enter the server and not
-be shown the `Login Screen` automatically as in the first tine.
 
-## Screens
+##### sites 
+##### boards
+##### board
+##### post
+##### item
+##### user
+##### login/register
 
-These are screens we have to develop in the app to begin with (we may change the
-design later, as it goes):
-
-* `Login Screen` - Already described in "Logging In"
-* `Boards Screen` - Shows all the boards of the Site
-* `Board Screen` - Shows the opening posts from a specific board, shows the
-  posting date, the user who posted and the number of replies, both direct
-  replies (replies to the OP) and thread replies (replies to replies)
-* `Post Screen` - Shows the OP and replies and theads of replies (replies to
-  replies), the discussion itself
-* `User Screen` - Shows the user's profile screen, public info etc. Allows
-  to change info if it's the own user's `User Screen`, just like a web forum
-  or a social nerwork.
-
+`/login` endpoint

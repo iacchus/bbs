@@ -38,9 +38,9 @@ We have, conceptually, components like (with short comments):
 
 * server (entry python process server running on ip/port)
 * sites - given `subject` inside server
-* boards - 
-* board -
-* post - opening post plus replies and replies of replies
+* boards - organization of a size; boards like any forum
+* board - list of topics, like any forum
+* post - opening post plus replies and replies of replies, like any forum
 * post\_item (or opening post or reply, both are post items; atomic) 
 * user - identity represented by its public key
 

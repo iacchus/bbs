@@ -5,12 +5,12 @@ https://github.com/iacchus/bbs-client
 
 Both should be developed together, this is, keeping the same pace, despite the
 fact the client is a refence implementation as the protocol we're developing
-will be open to diverse implementation.
+will be open to diverse implementations.
 
-This bbs is also the reference implementation to our bbs/forum protocol.
+This bbs is also only the reference implementation to our bbs/forum protocol.
 
-Its objective is to provide a forum-like experience  both with information
-exchange and privacy in mind.
+Its objective is to provide a forum-like experience both with information
+exchange and privacy in mind to overcome censorship.
 
 Users can easily change identity if necessary.
 
@@ -36,13 +36,33 @@ Python libraries and technologies useda for this server currently are:
 
 We have, conceptually, components like (with short comments):
 
-* server (entry python process server running on ip/port)
-* sites - given `subject` inside server
-* boards - organization of a size; boards like any forum
-* board - list of topics, like any forum
-* post - opening post plus replies and replies of replies, like any forum
-* post\_item (or opening post or reply, both are post items; atomic) 
-* user - identity represented by its public key
+* `server` (entry python process server running on ip/port)
+* `site` or `sites` - given `subject` inside server
+* `boards` - organization of a size; list boards like any forum
+* `board` - list of topics, like any forum
+* `post` - opening post plus replies and replies of replies, like any forum
+* `post\_item` (or opening post or reply, both are post items; atomic) 
+* `user` - identity represented by its public key
+* `data` - bytes, number\_of\_bytes, name (uri) and a mimetype (optional) -
+  **not to be implemented now**
+
+#### Components' Longer Description...
+
+... and further conceptual development
+
+##### `server`
+
+A `server` runs at an IP address and a port. A server is a set of one or more
+sites.
+
+Any server can run:
+
+1. one site only
+2. multiple sites
+
+##### `site` or `sites`
+
+If a server
 
 ### API Endpoints
 
@@ -56,6 +76,7 @@ We need to think in better names for some (or all) of these:
 * board
 * post
 * item
+* user
 
 #### API Endpoints Longer Description...
 

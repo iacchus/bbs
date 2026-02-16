@@ -34,18 +34,32 @@ Python libraries and technologies useda for this server currently are:
 
 ### Components
 
-We have, conceptually, components like:
+We have, conceptually, components like (with short comments):
 
-* server (entry python process running on ip/port)
-* sites, boards, board, post (opening post plus replies and replies of replies), post_item (openin post or reply, atomic) 
+* server (entry python process server running on ip/port)
+* sites - given `subject` inside server
+* boards - 
+* board -
+* post - opening post plus replies and replies of replies
+* post\_item (or opening post or reply, both are post items; atomic) 
+* user - identity represented by its public key
 
-Endpoints can somewhat reflect the user experience :) 
+### API Endpoints
 
-We need to think inbetter names for some (or all) of these:
+Endpoints can somewhat reflect the user experience in bbs-client :) 
+
+We need to think in better names for some (or all) of these:
+
 * login/register
 * sites - server; if server has more than 1 site (as an example, this is like Stack Exchange which has various sites, about different subjects, "buddhism", "vim" etc.) This is disabled if the server has only 1 site.
 * boards - list of boards inside a site,
-c
+* board
+* post
+* item
+
+#### API Endpoints Longer Description...
+
+... and further conceptual development
 
 After the user connected to a server the first time and have credentials and
 a server registered locally, it will automatically enter the server and not

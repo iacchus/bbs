@@ -134,19 +134,47 @@ We need to think in better names for some (or all) of these:
 
 The base of a site; 
 
-##### `/`
+###### `/`
 
 if the `server` has only one `site`
 
-##### `/<UNIQUE_SITE_ID>/`
+###### `/<UNIQUE_SITE_ID>/`
 
 if the `server` has multiple `site`s (multisite)
 
 ##### boards
+
+`boards` is mounted on the root of each site, as it is its "home", so as above.
+
 ##### board
-##### post
-##### item
-##### user
+
+###### `/board`
+
+Maybe there is a more fitting name than this, let's find out.
+
+This lists all `post_item`s which `reply_to` is None (null, or 0) and
+`board_id` is this boards `id`
+
+##### posts
+
+
+
+###### `/post`
+
+Find a good name for this endpoint/component.
+
+##### `post_item`
+
+##### `user`s
+
+###### `/user`
+
+Own user.
+
+###### `/user/{id:str}`
+
+Another user.
+
 ##### login/register
 
 `/login` endpoint

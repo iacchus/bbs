@@ -157,15 +157,13 @@ This lists all `post_item`s which `reply_to` is None (null, or 0) and
 
 ##### posts
 
-
-
 ###### `/post`
 
 Find a good name for this endpoint/component.
 
-##### `post_item`
+##### post item
 
-##### `user`s
+##### users
 
 ###### `/user`
 
@@ -177,4 +175,4 @@ Another user.
 
 ##### login/register
 
-`/login` endpoint
+###### `/login` endpoint

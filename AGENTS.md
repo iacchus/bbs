@@ -34,12 +34,12 @@ Python libraries and technologies useda for this server currently are:
 
 We have, conceptually, components like (with short comments):
 
-* `server` (entry python process server running on ip/port)
+* `server` - entry python process server running on ip/port
 * `site` or `sites` - given `subject` inside server
 * `boards` - organization of a size; list boards like any forum
 * `board` - list of topics, like any forum
 * `post` - opening post plus replies and replies of replies, like any forum
-* `post\_item` (or opening post or reply, both are post items; atomic) 
+* `post_item` - or opening post or reply, both are post items; atomic
 * `user` - identity represented by its public key
 * `data` - bytes, number\_of\_bytes, name (uri) and a mimetype (optional) -
   **not to be implemented now**
@@ -176,3 +176,7 @@ Another user.
 ##### login/register
 
 ###### `/login` endpoint
+
+##### data or file
+
+###### `/data` - **not to be implemented now**

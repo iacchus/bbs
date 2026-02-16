@@ -30,8 +30,6 @@ Python libraries and technologies useda for this server currently are:
   of a Challenge provided the server by using his private key, 
 * Login will be based on a similar fashion as registering.
 
-## Key concepts
-
 ### Components
 
 We have, conceptually, components like (with short comments):
@@ -132,8 +130,18 @@ We need to think in better names for some (or all) of these:
 
 ... and further conceptual development
 
-
 ##### sites 
+
+The base of a site; 
+
+##### `/`
+
+if the `server` has only one `site`
+
+##### `/<UNIQUE_SITE_ID>/`
+
+if the `server` has multiple `site`s (multisite)
+
 ##### boards
 ##### board
 ##### post

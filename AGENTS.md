@@ -62,7 +62,18 @@ Any server can run:
 
 ##### `site` or `sites`
 
-If a server
+A site is an instance of `BBS` class.
+
+About the number of sites a server has:
+
+1. If a server has only one site, that instance is mounted at its root path,
+  `/`, for example, at `https://<SERVER_ADDRESS>:<SERVER_PORT>/`.
+2. If a server has two or more sites, let's call them, as an example, with
+  uris "site1" and "anothersite", they will be mounted at:
+  * "site1" will be mounted at: `https://<SERVER_ADDRESS>:<SERVER_PORT>/site1/`
+  * "anothersite" will be mounted at: `https://<SERVER_ADDRESS>:<SERVER_PORT>/anothersite/`
+  Each will run it's own, independent instance, but in the same server.
+  Each one is an independent bbs/forum site.
 
 ### API Endpoints
 

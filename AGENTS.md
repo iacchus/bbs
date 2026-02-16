@@ -75,6 +75,25 @@ About the number of sites a server has:
   Each will run it's own, independent instance, but in the same server.
   Each one is an independent bbs/forum site.
 
+##### `boards`
+
+boards is the home of a site. Just like in any common forum, it lists the
+boards existing on that site/bbs/forum.
+
+##### `board`
+
+The `board` component is also common to any forum: it is a list of
+OPs (opening posts) in that board.
+
+##### `post`
+
+FIXME: we need to change the name of the `post` component because "post" should
+be valid for "opening posts" as well as for "replies" (comments or
+`post_item`s)
+
+The `post` component is also common to any forum: it is a opening post with its
+replies, comments.
+
 ### API Endpoints
 
 Endpoints can somewhat reflect the user experience in bbs-client :) 
@@ -88,6 +107,19 @@ We need to think in better names for some (or all) of these:
 * post
 * item
 * user
+
+##### `post_item`
+
+Any opening post or reply item.
+
+An opening post has the database column `reply_to` set to 0, while the reply
+has the column `reply_to` set to parent post `id`. Maybe the name of this
+column should be changed.
+
+##### `user`
+
+A user is represented by a registered public key, which registered by replying
+correctly signing a Challenge-Response test providaded by the server (`site`).
 
 #### API Endpoints Longer Description...
 

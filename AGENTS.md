@@ -30,19 +30,21 @@ Python libraries and technologies useda for this server currently are:
   of a Challenge provided the server by using his private key, 
 * Login will be based on a similar fashion as registering.
 
-### Components
+### Components & Terminology
 
-We have, conceptually, components like (with short comments):
+* **Server:** The entry python process (Litestar app).
+* **Site:** An instance of the BBS. A server may host multiple Sites (e.g., `/vim`, `/politics`) or just one at root (`/`).
+* **Board:** A category within a Site (e.g., "General Discussion", "Announcements").
+* **Thread:** A collection of posts starting with an Opening Post (OP).
+* **Post:** An atomic piece of content. 
+    * If `reply_to_id` is NULL, it is an Opening Post (start of a Thread).
+    * If `reply_to_id` is set, it is a Reply.
 
-* `server` - entry python process server running on ip/port
-* `site` or `sites` - given `subject` inside server
-* `boards` - organization of a size; list boards like any forum
-* `board` - list of topics, like any forum
-* `post` - opening post plus replies and replies of replies, like any forum
-* `post_item` - or opening post or reply, both are post items; atomic
-* `user` - identity represented by its public key
-* `data` - bytes, number\_of\_bytes, name (uri) and a mimetype (optional) -
-  **not to be implemented now**
+### Data Model (Proposed)
+
+* **User:** `public_key` (PK), `username` (optional).
+* **Board:** `id`, `slug`, `name`, `description`.
+* **Post:** `id`, `board_id` (FK), `author_pubkey` (FK), `reply_to_id` (FK, nullable), `content`, `created_at`.
 
 #### Components' Longer Description...
 
@@ -114,69 +116,19 @@ replying correctly signing a Challenge-Response test providaded by the server
 
 ### API Endpoints
 
-Endpoints can somewhat reflect the user experience in bbs-client :) 
+The API should follow RESTful conventions where possible:
 
-We need to think in better names for some (or all) of these:
+1. **Sites & Boards**
+   * `GET /` (or `/{site_slug}/`): List available Boards.
+   * `GET /boards/{board_id}`: List Threads (OPs) for a specific board.
 
-* sites 
-* boards
-* board
-* post
-* item
-* user
-* login/register
+2. **Threads & Posts**
+   * `POST /boards/{board_id}`: Create a new Thread.
+   * `GET /threads/{thread_id}`: View a Thread (OP + recursive replies).
+   * `POST /threads/{thread_id}`: Reply to a thread.
 
-#### API Endpoints Longer Description...
-
-... and further conceptual development
-
-##### sites 
-
-The base of a site; 
-
-###### `/`
-
-if the `server` has only one `site`
-
-###### `/<UNIQUE_SITE_ID>/`
-
-if the `server` has multiple `site`s (multisite)
-
-##### boards
-
-`boards` is mounted on the root of each site, as it is its "home", so as above.
-
-##### board
-
-###### `/board`
-
-Maybe there is a more fitting name than this, let's find out.
-
-This lists all `post_item`s which `reply_to` is None (null, or 0) and
-`board_id` is this boards `id`
-
-##### posts
-
-###### `/post`
-
-Find a good name for this endpoint/component.
-
-##### post item
-
-##### users
-
-###### `/user`
-
-Own user.
-
-###### `/user/{id:str}`
-
-Another user.
-
-##### login/register
-
-###### `/login` endpoint
-
-##### data or file
-
-###### `/data` - **not to be implemented now**
+3. **Users & Auth**
+   * `GET /user/request_challenge/{public_key}`: Step 1 of auth.
+   * `POST /user/register`: Step 2 of auth (Submit signed challenge).
+   * `GET /user/me`: Get current session info.
+   * `GET /user/{public_key}`: Get public profile of another user.

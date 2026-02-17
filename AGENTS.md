@@ -1,4 +1,4 @@
-# BBS Client
+# BBS Server
 
 This repository contains the server application for the client at
 https://github.com/iacchus/bbs-client

@@ -119,6 +119,23 @@ class BoardController(Controller):
         await post.save().run()
         return post.to_dict()
 
+    #  @post("/boards/{board_id:int}")
+    #  async def create_thread(self, board_id: int, data: CreateThreadPayload, request: Request) -> Dict[str, Any]:
+    #      if not request.user:
+    #           raise NotAuthorizedException()
+    #
+    #      if not await Board.exists().where(Board.id == board_id).run():
+    #          raise NotFoundException("Board not found")
+    #
+    #      post = Post(
+    #          board_id=board_id,
+    #          author_pubkey=request.user.public_key,
+    #          title=data.title,
+    #          content=data.content
+    #      )
+    #      await post.save().run()
+    #      return post.to_dict()
+
 class ThreadController(Controller):
     path = "/threads"
 

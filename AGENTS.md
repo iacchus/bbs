@@ -42,11 +42,9 @@ Python libraries and technologies useda for this server currently are:
     * If `reply_to_id` is NULL, it is an Opening Post (start of a Thread).
     * If `reply_to_id` is set, it is a Reply.
 
-#### Data Model (Proposed)
+#### Data Model
 
-* **User:** `public_key` (PK), `username` (optional).
-* **Board:** `id`, `slug`, `name`, `description`.
-* **Post:** `id`, `board_id` (FK), `author_pubkey` (FK), `reply_to_id` (FK, nullable), `title` (nullable), `content`, `created_at`.
+* Being implemented in `bbs_server/tables.py`
 
 #### API Endpoints
 

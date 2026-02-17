@@ -40,7 +40,7 @@ def cli() -> None:
 
 
 @cli.command(epilog="Runs BBS")
-def run():
+def start():
     """Runs the BBS"""
 
     run_uvicorn()

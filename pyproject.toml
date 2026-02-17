@@ -59,8 +59,8 @@ classifiers = [
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
-bbs-cli = "bbs:cli"
-bbs-tui = "bbs_client.app:run"
+bbs-server = "bbs_server:start"
+bbs-client = "bbs_client.app:run"
 # bbs-cli = "bbs.__main__:cli"
 # bbs-cli = "bbs:run_uvicorn"
 # spam-cli = "spam:main_cli"

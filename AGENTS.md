@@ -21,6 +21,7 @@ Python libraries and technologies useda for this server currently are:
 * [piccolo orm](https://github.com/piccolo-orm/piccolo) (handling sqlite3 to persist data)
 * [pynacl](https://github.com/pyca/pynacl) (handling user credentials)
 * [click](https://github.com/pallets/click) (handling command-line options)
+* sqlite (handling database)
 
 ## Key concepts
 
@@ -44,7 +45,7 @@ Python libraries and technologies useda for this server currently are:
 
 * **User:** `public_key` (PK), `username` (optional).
 * **Board:** `id`, `slug`, `name`, `description`.
-* **Post:** `id`, `board_id` (FK), `author_pubkey` (FK), `reply_to_id` (FK, nullable), `content`, `created_at`.
+* **Post:** `id`, `board_id` (FK), `author_pubkey` (FK), `reply_to_id` (FK, nullable), `title` (nullable), `content`, `created_at`.
 
 ### API Endpoints
 
@@ -64,3 +65,12 @@ The API should follow RESTful conventions where possible:
    * `POST /user/register`: Step 2 of auth (Submit signed challenge).
    * `GET /user/me`: Get current session info.
    * `GET /user/{public_key}`: Get public profile of another user.
+
+4. **Real-time (WebSockets)**
+   * `WS /ws`: WebSocket endpoint.
+     * Clients connect to receive real-time JSON events (e.g., `{"type": "new_post", "board_id": 1}`).
+     * Server broadcasts messages to connected clients when new content is created.
+
+List endpoints (Boards, Threads) should support pagination (e.g., ``?page=1&limit=20`).
+
+The API router handles the site context. If accessing https://bbs.org/vim/, the {site_slug} is 'vim'.

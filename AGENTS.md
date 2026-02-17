@@ -1,13 +1,14 @@
 # BBS Server
 
-This repository contains the server application for the client at
-https://github.com/iacchus/bbs-client
+This repository contains the server  and client applications for our bbs forum
+system
 
-Both should be developed together, this is, keeping the same pace, despite the
-fact the client is a refence implementation as the protocol we're developing
-will be open to diverse implementations.
+Server is at `bbs/`
+Client is at `bbs_client/`
 
-This bbs is also only the reference implementation to our bbs/forum protocol.
+Both should be developed together.
+
+## BBS Server
 
 Its objective is to provide a forum-like experience both with information
 exchange and privacy in mind to overcome censorship.
@@ -23,7 +24,7 @@ Python libraries and technologies useda for this server currently are:
 * [click](https://github.com/pallets/click) (handling command-line options)
 * sqlite (handling database)
 
-## Key concepts
+### Key concepts
 
 * User credentials will be self-created Ed25519 keys, using PyNaCl library.
 * Registering an account will be based in Challenge-Response based on
@@ -31,7 +32,7 @@ Python libraries and technologies useda for this server currently are:
   of a Challenge provided the server by using his private key, 
 * Login will be based on a similar fashion as registering.
 
-### Components & Terminology
+#### Components & Terminology
 
 * **Server:** The entry python process (Litestar app).
 * **Site:** An instance of the BBS. A server may host multiple Sites (e.g., `/vim`, `/politics`) or just one at root (`/`).
@@ -41,13 +42,13 @@ Python libraries and technologies useda for this server currently are:
     * If `reply_to_id` is NULL, it is an Opening Post (start of a Thread).
     * If `reply_to_id` is set, it is a Reply.
 
-### Data Model (Proposed)
+#### Data Model (Proposed)
 
 * **User:** `public_key` (PK), `username` (optional).
 * **Board:** `id`, `slug`, `name`, `description`.
 * **Post:** `id`, `board_id` (FK), `author_pubkey` (FK), `reply_to_id` (FK, nullable), `title` (nullable), `content`, `created_at`.
 
-### API Endpoints
+#### API Endpoints
 
 The API should follow RESTful conventions where possible:
 
@@ -74,3 +75,55 @@ The API should follow RESTful conventions where possible:
 List endpoints (Boards, Threads) should support pagination (e.g., ``?page=1&limit=20`).
 
 The API router handles the site context. If accessing https://bbs.org/vim/, the {site_slug} is 'vim'.
+
+## BBS Client
+
+This repository contains the client application for the server at https://github.com/iacchus/bbs
+
+It is a TUI (text-user-interface) client written in python using Textual library.
+
+Its objective is to provide a forum-like experience on the Linux terminal.
+
+Python libraries and technologies used are:
+
+* [python](https://www.python.org/) language
+* [textual](https://github.com/textualize/textual/) (handling the text user interface)
+* [httpx](https://github.com/encode/httpx/) (handling http, https requests)
+* [websockets](https://github.com/python-websockets/websockets) (handling real-time updates)
+* [piccolo orm](https://github.com/piccolo-orm/piccolo) (handling sqlite3 to persist data)
+* sqlite3
+* [pynacl](https://github.com/pyca/pynacl) (handling user credentials)
+* [click](https://github.com/pallets/click) (handling command-line options)
+
+### Key Concepts
+
+* **Async Architecture:** The client uses `httpx` to communicate with the server asynchronously, ensuring the `Textual` UI never freezes during network operations.
+* **Local Identity:** User credentials (Ed25519 keys) are generated and stored locally in the client's SQLite database.
+* **Server Management:** The client can store multiple server addresses (bookmarks) and multiple identities (keys), allowing the user to switch between them.
+* **Real-time UI Updates:** The client maintains a background WebSocket connection to the server's `/ws/notifications` endpoint. When the server broadcasts an event (like a new reply in the currently viewed thread), Textual reacts by showing a notification badge or auto-fetching the new data via REST.
+
+### Screens & UI Flow
+
+#### 1. Connection Manager (formerly Login Screen)
+This is the entry point. It handles:
+* **Server Selection:** Choose a saved server or add a new URL.
+* **Identity Selection:** Choose an existing Profile (Keys) or generate a new one.
+* *Action:* Once a Server and Identity are selected, the user enters the `Board List`.
+
+#### 2. Board List (Home)
+* Displays a list of all boards available on the selected server.
+* *Navigation:* Select a board to enter the `Thread List`.
+
+#### 3. Thread List (Board View)
+* Displays the list of threads (Opening Posts) for the selected board.
+* Shows metadata: Title, Author, Date, Reply Count.
+* *Action:* Press `c` (or similar) to open the `Compose Modal` and create a new thread.
+
+#### 4. Thread View (Post View)
+* Displays the Opening Post (OP) followed by a tree/list of replies.
+* *Action:* Press `r` on any post to open the `Compose Modal` and reply to that specific post.
+
+#### 5. Compose Modal
+* A pop-up dialog or dedicated screen for writing content (Markdown supported).
+* Used for both creating new threads and writing replies.
+

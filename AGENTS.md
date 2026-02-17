@@ -74,6 +74,19 @@ List endpoints (Boards, Threads) should support pagination (e.g., ``?page=1&limi
 
 The API router handles the site context. If accessing https://bbs.org/vim/, the {site_slug} is 'vim'.
 
+#### Implementation Notes for Agents
+
+* **Core Patch:** `bbs/core.py` includes a runtime patch for `litestar.security.jwt.auth` to fix type hint evaluation issues. Do not remove this block unless the underlying Litestar dependency is updated to a version that resolves it.
+* **Database Strategy:** The `BBS` class manages multi-tenancy by dynamically binding SQLite engines to tables using the naming convention `db-{uri}.sqlite`. Persistence is instance-specific.
+* **Routing Logic:** The application uses an `app_factory`. If only one instance is configured, it mounts to root (`/`). If multiple exist, they are mounted at `/{instance_name}`.
+
+#### Feature Status Tracker
+
+* **Data Model:** Implemented as described in `bbs/tables.py`.
+* **Auth Flow:** Implemented (Challenge-Response + JWT Cookies) in `bbs/routes.py` and `bbs/core.py`.
+* **WebSockets:** Planned. Current client code references a notification endpoint that is not yet implemented on the server.
+* **API Endpoints:** `GET /user/{public_key}` and pagination parameters are currently placeholders and require implementation in `BoardController` and `UserController`.
+
 ## BBS Client
 
 This repository contains the client application for the server at https://github.com/iacchus/bbs

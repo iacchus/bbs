@@ -9,6 +9,12 @@ from litestar.datastructures import State
 from .tables import User, AuthChallenge, Board, Post
 from .routes import UserController, BoardController, ThreadController
 
+# PATCH: Inject missing runtime type hints into litestar.security.jwt.auth
+# This fixes NameError: name 'ASGIConnection' is not defined during type hint evaluation
+import litestar.security.jwt.auth as jwt_auth_module
+jwt_auth_module.ASGIConnection = ASGIConnection
+
+
 SQLITE_FILE_NAME = "db-{uri}.sqlite"
 SESSION_SECRET = "super-secret-session-key-123"
 

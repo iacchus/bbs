@@ -9,6 +9,7 @@ dependencies = [
   "click",
   "litestar",
   "piccolo",
+  "aiosqlite",
   "pynacl",
   "pyjwt",
   "python-jose",

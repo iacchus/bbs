@@ -10,9 +10,28 @@ from .tables import User, AuthChallenge, Board, Post
 from .routes import UserController, BoardController, ThreadController
 
 # PATCH: Inject missing runtime type hints into litestar.security.jwt.auth
+from litestar.handlers import BaseRouteHandler
+from litestar import Response
+from litestar.di import Provide
+from typing import Any
+
+class SubscriptableAny:
+    def __class_getitem__(cls, item):
+        return Any
+
 # This fixes NameError: name 'ASGIConnection' is not defined during type hint evaluation
 import litestar.security.jwt.auth as jwt_auth_module
 jwt_auth_module.ASGIConnection = ASGIConnection
+jwt_auth_module.BaseRouteHandler = BaseRouteHandler
+jwt_auth_module.Response = Response
+jwt_auth_module.Provide = Provide
+jwt_auth_module.ControllerRouterHandler = Any
+jwt_auth_module.RouteHandlerType = Any
+jwt_auth_module.Method = Any
+jwt_auth_module.Scopes = Any
+jwt_auth_module.Guard = Any
+jwt_auth_module.TypeEncodersMap = Any
+jwt_auth_module.SyncOrAsyncUnion = SubscriptableAny
 
 
 SQLITE_FILE_NAME = "db-{uri}.sqlite"

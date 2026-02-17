@@ -8,7 +8,7 @@ version = "0.0.1"
 dependencies = [
   "click",
   "litestar",
-  "piccolo",
+  "piccolo[sqlite]",
   "aiosqlite",
   "pynacl",
   "pyjwt",
@@ -17,6 +17,15 @@ dependencies = [
   "starlette",
   "toml",
   "uvicorn",
+  "textual",
+  "httpx",
+  "websockets",
+  "python-dotenv",
+  "rich",
+  "rich-click",
+  "markdown-it-py",
+  "litestar-htmx",
+  "anyio",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -51,6 +60,7 @@ classifiers = [
 
 [project.scripts]
 bbs-cli = "bbs:cli"
+bbs-tui = "bbs_client.app:run"
 # bbs-cli = "bbs.__main__:cli"
 # bbs-cli = "bbs:run_uvicorn"
 # spam-cli = "spam:main_cli"

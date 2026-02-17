@@ -53,3 +53,17 @@ pip install -e .
 * [sqlmodel](https://sqlmodel.tiangolo.com/)
 * [starlette](https://www.starlette.io/)
 * [uvicorn](https://www.uvicorn.org/)
+
+## running the client
+
+The client is a TUI application. You can run it with:
+
+```
+bbs-tui
+```
+
+or
+
+```
+python -m bbs_client.app
+```

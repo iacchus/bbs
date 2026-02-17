@@ -29,9 +29,9 @@ class BBS:
 
         async def retrieve_user_handler(token: Token, connection: ASGIConnection) -> User | None:
             # Get engine from app state
-            db_engine = connection.app.state.db_engine
+
             # User might be bound to the last initialized engine, so we MUST override it.
-            return await User.objects().get(User.public_key == token.sub).run(engine=db_engine)
+            return await User.objects().get(User.public_key == token.sub).run()
 
         self.jwt_cookie_auth = JWTCookieAuth[User](
             retrieve_user_handler=retrieve_user_handler,

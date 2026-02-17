@@ -4,7 +4,6 @@ from litestar import Controller, get, post, Request, Response
 from litestar.exceptions import NotFoundException, NotAuthorizedException
 from litestar.status_codes import HTTP_201_CREATED
 from litestar.security.jwt import JWTCookieAuth
-from piccolo.engine.sqlite import SQLiteEngine
 from pydantic import BaseModel
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
@@ -30,19 +29,19 @@ class UserController(Controller):
     path = "/user"
 
     @get("/request_challenge/{public_key:str}")
-    async def request_challenge(self, public_key: str, db_engine: SQLiteEngine) -> dict[str, str]:
+    async def request_challenge(self, public_key: str) -> dict[str, str]:
         nonce = secrets.token_hex(32)
         await AuthChallenge.insert(
             AuthChallenge(public_key=public_key, nonce=nonce)
-        ).run(engine=db_engine)
+        ).run()
         return {"nonce": nonce}
 
     @post("/register")
-    async def register(self, data: LoginPayload, db_engine: SQLiteEngine, jwt_auth: JWTCookieAuth) -> Response:
+    async def register(self, data: LoginPayload, jwt_auth: JWTCookieAuth) -> Response:
         # 1. Retrieve the pending challenge
         challenge = await AuthChallenge.objects().where(
             AuthChallenge.public_key == data.public_key
-        ).order_by(AuthChallenge.created_at, ascending=False).first().run(engine=db_engine)
+        ).order_by(AuthChallenge.created_at, ascending=False).first().run()
 
         if not challenge:
             raise NotFoundException("No pending challenge found. Request one first.")
@@ -59,13 +58,13 @@ class UserController(Controller):
             raise NotAuthorizedException("Invalid Signature")
 
         # 3. Cleanup
-        await AuthChallenge.delete().where(AuthChallenge.id == challenge.id).run(engine=db_engine)
+        await AuthChallenge.delete().where(AuthChallenge.id == challenge.id).run()
 
         # 4. Check/Create User
-        user = await User.objects().get(User.public_key == data.public_key).run(engine=db_engine)
+        user = await User.objects().get(User.public_key == data.public_key).run()
         if not user:
             user = User(public_key=data.public_key)
-            await user.save().run(engine=db_engine)
+            await user.save().run()
 
         # 5. Issue Cookie
         response = jwt_auth.login(identifier=user.public_key)
@@ -76,7 +75,7 @@ class UserController(Controller):
         )
 
     @get("/me")
-    async def user_profile(self, request: Request, db_engine: SQLiteEngine) -> dict[str, Any]:
+    async def user_profile(self, request: Request) -> dict[str, Any]:
         if not request.user:
              raise NotAuthorizedException()
         return {
@@ -87,28 +86,28 @@ class BoardController(Controller):
     path = "/"
 
     @get("/")
-    async def list_boards(self, db_engine: SQLiteEngine, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
+    async def list_boards(self, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
         offset = (page - 1) * limit
-        boards = await Board.select().limit(limit).offset(offset).run(engine=db_engine)
+        boards = await Board.select().limit(limit).offset(offset).run()
         return boards
 
     @get("/boards/{board_id:int}")
-    async def list_threads(self, board_id: int, db_engine: SQLiteEngine, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
-        if not await Board.exists().where(Board.id == board_id).run(engine=db_engine):
+    async def list_threads(self, board_id: int, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
+        if not await Board.exists().where(Board.id == board_id).run():
              raise NotFoundException("Board not found")
 
         offset = (page - 1) * limit
         threads = await Post.select().where(
             (Post.board_id == board_id) & (Post.reply_to_id.is_null())
-        ).order_by(Post.created_at, ascending=False).limit(limit).offset(offset).run(engine=db_engine)
+        ).order_by(Post.created_at, ascending=False).limit(limit).offset(offset).run()
         return threads
 
     @post("/boards/{board_id:int}")
-    async def create_thread(self, board_id: int, data: CreateThreadPayload, request: Request, db_engine: SQLiteEngine) -> Dict[str, Any]:
+    async def create_thread(self, board_id: int, data: CreateThreadPayload, request: Request) -> Dict[str, Any]:
         if not request.user:
              raise NotAuthorizedException()
 
-        if not await Board.exists().where(Board.id == board_id).run(engine=db_engine):
+        if not await Board.exists().where(Board.id == board_id).run():
             raise NotFoundException("Board not found")
 
         post = Post(
@@ -117,30 +116,30 @@ class BoardController(Controller):
             title=data.title,
             content=data.content
         )
-        await post.save().run(engine=db_engine)
+        await post.save().run()
         return post.to_dict()
 
 class ThreadController(Controller):
     path = "/threads"
 
     @get("/{thread_id:int}")
-    async def view_thread(self, thread_id: int, db_engine: SQLiteEngine) -> List[Dict[str, Any]]:
-        op = await Post.objects().get(Post.id == thread_id).run(engine=db_engine)
+    async def view_thread(self, thread_id: int) -> List[Dict[str, Any]]:
+        op = await Post.objects().get(Post.id == thread_id).run()
         if not op:
             raise NotFoundException("Thread not found")
 
         # Recursive query to fetch entire thread tree (no pagination for now)
         query = "WITH RECURSIVE thread_posts AS ( SELECT * FROM post WHERE id = {} UNION ALL SELECT p.* FROM post p JOIN thread_posts tp ON p.reply_to_id = tp.id ) SELECT * FROM thread_posts;".format(thread_id)
 
-        results = await Post.raw(query).run(engine=db_engine)
+        results = await Post.raw(query).run()
         return results
 
     @post("/{thread_id:int}")
-    async def reply_to_thread(self, thread_id: int, data: CreateReplyPayload, request: Request, db_engine: SQLiteEngine) -> Dict[str, Any]:
+    async def reply_to_thread(self, thread_id: int, data: CreateReplyPayload, request: Request) -> Dict[str, Any]:
         if not request.user:
              raise NotAuthorizedException()
 
-        parent_post = await Post.objects().get(Post.id == thread_id).run(engine=db_engine)
+        parent_post = await Post.objects().get(Post.id == thread_id).run()
         if not parent_post:
             raise NotFoundException("Thread/Post not found")
 
@@ -150,5 +149,5 @@ class ThreadController(Controller):
             reply_to_id=thread_id,
             content=data.content
         )
-        await reply.save().run(engine=db_engine)
+        await reply.save().run()
         return reply.to_dict()

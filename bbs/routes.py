@@ -1,7 +1,7 @@
 import secrets
 from typing import Any, List, Dict
 from litestar import Controller, get, post, Request, Response
-from litestar.exceptions import NotFoundException, NotAuthorizedException
+from litestar.exceptions import NotFoundException, NotAuthorizedException, HTTPException
 from litestar.status_codes import HTTP_201_CREATED
 from litestar.security.jwt import JWTCookieAuth
 from pydantic import BaseModel
@@ -22,6 +22,12 @@ class CreateThreadPayload(BaseModel):
 
 class CreateReplyPayload(BaseModel):
     content: str
+
+class CreateBoardPayload(BaseModel):
+    name: str
+    description: str
+    slug: str
+
 
 # Controllers
 
@@ -77,13 +83,30 @@ class UserController(Controller):
     @get("/me")
     async def user_profile(self, request: Request) -> dict[str, Any]:
         if not request.user:
-             raise NotAuthorizedException()
+            raise NotAuthorizedException()
         return {
             "my_public_key": request.user.public_key,
         }
 
 class BoardController(Controller):
     path = "/"
+
+
+    @post("/")
+    async def create_board(self, data: CreateBoardPayload, request: Request) -> Dict[str, Any]:
+        if not request.user:
+            raise NotAuthorizedException()
+
+        if await Board.exists().where(Board.slug == data.slug).run():
+            raise HTTPException(detail="Board with this slug already exists", status_code=409)
+
+        board = Board(
+            name=data.name,
+            description=data.description,
+            slug=data.slug
+        )
+        await board.save().run()
+        return board.to_dict()
 
     @get("/")
     async def list_boards(self, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
@@ -105,7 +128,7 @@ class BoardController(Controller):
     @post("/boards/{board_id:int}")
     async def create_thread(self, board_id: int, data: CreateThreadPayload, request: Request) -> Dict[str, Any]:
         if not request.user:
-             raise NotAuthorizedException()
+            raise NotAuthorizedException()
 
         if not await Board.exists().where(Board.id == board_id).run():
             raise NotFoundException("Board not found")
@@ -154,7 +177,7 @@ class ThreadController(Controller):
     @post("/{thread_id:int}")
     async def reply_to_thread(self, thread_id: int, data: CreateReplyPayload, request: Request) -> Dict[str, Any]:
         if not request.user:
-             raise NotAuthorizedException()
+            raise NotAuthorizedException()
 
         parent_post = await Post.objects().get(Post.id == thread_id).run()
         if not parent_post:

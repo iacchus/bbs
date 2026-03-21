@@ -1,10 +1,10 @@
-# BBS Server
+# BBS Client/server platform
 
 This repository contains the server  and client applications for our bbs forum
 system
 
-Server is at `bbs/`
-Client is at `bbs_client/`
+* Server is at `bbs_server/`
+* Client is at `bbs_client/`
 
 Both should be developed together.
 
@@ -76,26 +76,24 @@ The API router handles the site context. If accessing https://bbs.org/vim/, the 
 
 #### Implementation Notes for Agents
 
-* **Core Patch:** `bbs/core.py` includes a runtime patch for `litestar.security.jwt.auth` to fix type hint evaluation issues. Do not remove this block unless the underlying Litestar dependency is updated to a version that resolves it.
+* **Core Patch:** `bbs_server/core.py` includes a runtime patch for `litestar.security.jwt.auth` to fix type hint evaluation issues. Do not remove this block unless the underlying Litestar dependency is updated to a version that resolves it.
 * **Database Strategy:** The `BBS` class manages multi-tenancy by dynamically binding SQLite engines to tables using the naming convention `db-{uri}.sqlite`. Persistence is instance-specific.
 * **Routing Logic:** The application uses an `app_factory`. If only one instance is configured, it mounts to root (`/`). If multiple exist, they are mounted at `/{instance_name}`.
 
 #### Feature Status Tracker
 
-* **Data Model:** Implemented as described in `bbs/tables.py`.
-* **Auth Flow:** Implemented (Challenge-Response + JWT Cookies) in `bbs/routes.py` and `bbs/core.py`.
+* **Data Model:** Implemented as described in `bbs_server/tables.py`.
+* **Auth Flow:** Implemented (Challenge-Response + JWT Cookies) in `bbs_server/routes.py` and `bbs_server/core.py`.
 * **WebSockets:** Planned. Current client code references a notification endpoint that is not yet implemented on the server.
 * **API Endpoints:** `GET /user/{public_key}` and pagination parameters are currently placeholders and require implementation in `BoardController` and `UserController`.
 
 ## BBS Client
 
-This repository contains the client application for the server at https://github.com/iacchus/bbs
-
-It is a TUI (text-user-interface) client written in python using Textual library.
+This is a TUI (text-user-interface) client written in python using Textual library.
 
 Its objective is to provide a forum-like experience on the Linux terminal.
 
-Python libraries and technologies used are:
+Python libraries and technologies used here are the following:
 
 * [python](https://www.python.org/) language
 * [textual](https://github.com/textualize/textual/) (handling the text user interface)

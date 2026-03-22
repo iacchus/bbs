@@ -2,7 +2,8 @@ from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal, VerticalScroll
 from textual.widgets import Header, Footer, Input, Button, Label, Select, DataTable, Static, TextArea, Tree
 from textual.screen import Screen, ModalScreen
-from textual import on, work
+from textual import on, work, events
+from textual.binding import Binding
 from textual.reactive import reactive
 import asyncio
 
@@ -515,6 +516,55 @@ class ThreadList(Screen):
         thread_id = row[0]
         self.app.push_screen(ThreadView(thread_id=thread_id))
 
+class PostItem(Vertical):
+    can_focus = True
+    
+    BINDINGS = [
+        Binding("enter", "reply", "Reply"),
+        Binding("space", "toggle_collapse", "Toggle Collapse"),
+        Binding("down", "focus_next", "Next", show=False),
+        Binding("up", "focus_previous", "Previous", show=False),
+    ]
+
+    def __init__(self, pid: int, author: str, content: str, is_op: bool, **kwargs):
+        super().__init__(**kwargs)
+        self.pid = pid
+        self.author = author
+        self.post_content = content
+        self.is_op = is_op
+
+    def compose(self) -> ComposeResult:
+        yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
+        yield Static(self.post_content, classes="post_content")
+        yield Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
+
+    async def on_click(self, event: events.Click):
+        if isinstance(event.widget, Label) and event.widget.has_class("post_header"):
+            self.action_toggle_collapse()
+
+    def action_toggle_collapse(self):
+        branch = self.parent
+        if branch and branch.has_class("thread_branch"):
+            try:
+                # toggle display of all children inside the branch except the first widget (which is this post)
+                for child in branch.children:
+                    if child != self:
+                        child.display = not child.display
+            except Exception:
+                pass
+                
+    def action_reply(self):
+        try:
+            self.app.query_one("ThreadView").post_reply(self.pid)
+        except Exception:
+            pass
+
+    def action_focus_next(self):
+        self.app.action_focus_next()
+
+    def action_focus_previous(self):
+        self.app.action_focus_previous()
+
 class ThreadView(Screen):
     def __init__(self, thread_id: int):
         super().__init__()
@@ -575,12 +625,7 @@ class ThreadView(Screen):
                 is_op = (pid == self.thread_id)
 
                 # The actual post content
-                post_widget = Vertical(
-                    Label(f"#{pid} by {author}{' (OP)' if is_op else ''}", classes="post_header"),
-                    Static(content, classes="post_content"),
-                    Button("Reply", id=f"reply_{pid}", classes="reply_small_btn"),
-                    classes="post_item"
-                )
+                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, classes="post_item")
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
@@ -590,9 +635,11 @@ class ThreadView(Screen):
 
                 # Recursively get children widgets
                 child_widgets = [render_post(child, depth + 1) for child in children_map.get(pid, [])]
+                children_container = Vertical(*child_widgets, classes="children_container")
+                children_container.styles.height = "auto"
 
                 # Create the branch container with post and children as initial widgets
-                branch = Vertical(post_widget, *child_widgets, classes="thread_branch")
+                branch = Vertical(post_widget, children_container, classes="thread_branch")
                 
                 # Styles
                 if depth > 1:
@@ -617,16 +664,18 @@ class ThreadView(Screen):
         except Exception as e:
             self.notify(f"Error loading thread: {e}", severity="error")
 
+    def post_reply(self, post_id: int):
+        def after_submit(result):
+            if result:
+                self.run_worker(self.load_thread())
+        self.app.push_screen(ComposeModal(thread_id=self.thread_id, parent_id=post_id), after_submit)
+
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id and event.button.id.startswith("reply_"):
             try:
                 post_id = int(event.button.id.split("_")[1])
-                def after_submit(result):
-                    if result:
-                        self.run_worker(self.load_thread())
-                # Reply to a specific post
-                self.app.push_screen(ComposeModal(thread_id=self.thread_id, parent_id=post_id), after_submit)
+                self.post_reply(post_id)
             except:
                 pass
 
@@ -726,6 +775,9 @@ class BBSApp(App):
         margin: 0;
         padding: 0 0 1 0;
         height: auto;
+    }
+    .post_item:focus {
+        background: $boost;
     }
     .thread_branch {
         height: auto;

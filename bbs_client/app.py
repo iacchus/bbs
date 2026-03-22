@@ -528,17 +528,21 @@ class PostItem(Vertical):
         Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
-    def __init__(self, pid: int, author: str, content: str, is_op: bool, **kwargs):
+    def __init__(self, pid: int, author: str, content: str, is_op: bool, children_count: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.pid = pid
         self.author = author
         self.post_content = content
         self.is_op = is_op
+        self.children_count = children_count
+        self.is_collapsed = False
 
     def compose(self) -> ComposeResult:
         yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
         yield Static(self.post_content, classes="post_content")
         yield Horizontal(
+            Button(f"+ (expand {self.children_count} replies)", id=f"expand_{self.pid}", classes="expand_btn hidden"),
+            Static(classes="reply_spacer"),
             Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn"),
             classes="reply_container"
         )
@@ -550,6 +554,11 @@ class PostItem(Vertical):
         except Exception:
             pass
 
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id and event.button.id.startswith("expand_"):
+            self.action_toggle_collapse()
+
     async def on_click(self, event: events.Click):
         if isinstance(event.widget, Label) and event.widget.has_class("post_header"):
             self.action_toggle_collapse()
@@ -558,10 +567,17 @@ class PostItem(Vertical):
         branch = self.parent
         if branch and branch.has_class("thread_branch"):
             try:
+                self.is_collapsed = not self.is_collapsed
                 # toggle display of all children inside the branch except the first widget (which is this post)
                 for child in branch.children:
                     if child != self:
-                        child.display = not child.display
+                        child.display = not self.is_collapsed
+                        
+                expand_btn = self.query_one(f"#expand_{self.pid}", Button)
+                if self.is_collapsed and self.children_count > 0:
+                    expand_btn.remove_class("hidden")
+                else:
+                    expand_btn.add_class("hidden")
             except Exception:
                 pass
                 
@@ -629,15 +645,22 @@ class ThreadView(Screen):
                 if parent_id:
                     children_map.setdefault(parent_id, []).append(p)
 
+            def get_total_children(pid: int) -> int:
+                count = 0
+                for child in children_map.get(pid, []):
+                    count += 1 + get_total_children(child["id"])
+                return count
+
             # 2. Recursive render function
             def render_post(post, depth=0):
                 content = post.get("content", "")
                 author = post.get("author_pubkey", "")[:8]
                 pid = post.get("id")
                 is_op = (pid == self.thread_id)
+                children_count = get_total_children(pid)
 
                 # The actual post content
-                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, classes="post_item")
+                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, children_count=children_count, classes="post_item")
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
@@ -802,15 +825,17 @@ class BBSApp(App):
     .post_content {
         padding: 1;
     }
-    .reply_small_btn {
+    .reply_small_btn, .expand_btn {
         min-width: 10;
         height: 1;
         border: none;
     }
+    .reply_spacer {
+        width: 1fr;
+    }
     .reply_container {
         display: none;
         height: auto;
-        align: right middle;
     }
     .post_item:focus .reply_container {
         display: block;
@@ -832,8 +857,12 @@ class BBSApp(App):
     .thread_border_3 { border-left: solid $warning; }
     .thread_border_4 { border-left: solid $error; }
     .thread_border_5 { border-left: solid $accent; }
-    #board_table, #thread_table, #posts_container {
+    #board_table, #thread_table {
         height: 1fr;
+    }
+    #posts_container {
+        height: 1fr;
+        padding: 1 2;
     }
     .button-bar {
         height: 3;

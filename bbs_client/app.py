@@ -373,7 +373,26 @@ class ComposeModal(ModalScreen):
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
 
+from textual.binding import Binding
+import time
+
 class BBSApp(App):
+    BINDINGS = [
+        Binding("ctrl+c", "quit_gracefully", "Quit", show=True, priority=True),
+    ]
+
+    def __init__(self):
+        super().__init__()
+        self.last_ctrl_c_time = 0
+
+    def action_quit_gracefully(self):
+        now = time.time()
+        if now - self.last_ctrl_c_time < 2:
+            self.exit()
+        else:
+            self.last_ctrl_c_time = now
+            self.notify("Press Ctrl+C again to exit", timeout=2)
+
     CSS = """
     ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal {
         align: center top;

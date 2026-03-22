@@ -1,6 +1,12 @@
+from enum import Enum
 import datetime
 from piccolo.table import Table
 from piccolo.columns import Varchar, Timestamp, Text, Serial, ForeignKey
+
+class UserRole(Enum):
+    user = 'user'
+    moderator = 'moderator'
+    admin = 'admin'
 
 class User(Table):
     """
@@ -9,6 +15,7 @@ class User(Table):
     """
     public_key = Varchar(length=64, unique=True, primary_key=True)
     username = Varchar(length=50, null=True) # Optional display name
+    role = Varchar(length=20, default=UserRole.user, choices=UserRole)
 
 class AuthChallenge(Table):
     """Stores temporary nonces to prevent replay attacks."""

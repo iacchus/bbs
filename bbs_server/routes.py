@@ -69,13 +69,16 @@ class UserController(Controller):
         # 4. Check/Create User
         user = await User.objects().get(User.public_key == data.public_key).run()
         if not user:
-            user = User(public_key=data.public_key)
+            # First user becomes admin
+            has_users = await User.exists().run()
+            role = 'admin' if not has_users else 'user'
+            user = User(public_key=data.public_key, role=role)
             await user.save().run()
 
         # 5. Issue Cookie
         response = jwt_auth.login(identifier=user.public_key)
         return Response(
-            content={"message": "Logged in!", "user": user.public_key},
+            content={"message": "Logged in!", "user": user.public_key, "role": user.role},
             cookies=response.cookies,
             status_code=HTTP_201_CREATED
         )
@@ -86,6 +89,7 @@ class UserController(Controller):
             raise NotAuthorizedException()
         return {
             "my_public_key": request.user.public_key,
+            "role": request.user.role
         }
 
 class BoardController(Controller):
@@ -94,8 +98,8 @@ class BoardController(Controller):
 
     @post("/")
     async def create_board(self, data: CreateBoardPayload, request: Request) -> Dict[str, Any]:
-        if not request.user:
-            raise NotAuthorizedException()
+        if not request.user or request.user.role != 'admin':
+            raise NotAuthorizedException("Only admins can create boards")
 
         if await Board.exists().where(Board.slug == data.slug).run():
             raise HTTPException(detail="Board with this slug already exists", status_code=409)

@@ -33,6 +33,14 @@ async def get_all_identities():
 async def add_identity(name: str, private_key: str, public_key: str):
     await IdentityRecord(name=name, private_key=private_key, public_key=public_key).save()
 
+async def update_identity_name(private_key: str, new_name: str):
+    await IdentityRecord.update({IdentityRecord.name: new_name}).where(
+        IdentityRecord.private_key == private_key
+    ).run()
+
+async def delete_identity(private_key: str):
+    await IdentityRecord.delete().where(IdentityRecord.private_key == private_key).run()
+
 async def get_all_servers():
     return await ServerRecord.objects()
 

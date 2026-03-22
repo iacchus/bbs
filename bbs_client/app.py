@@ -94,13 +94,57 @@ class NewIdentityModal(ModalScreen):
 
         screen = self.app.get_screen("connection")
         if isinstance(screen, ConnectionManager):
-             screen.identities = await get_all_identities()
-             options = [(i.name, i.private_key) for i in screen.identities]
-             select = screen.query_one("#identity_select")
-             select.set_options(options)
-             select.value = identity.private_key
+             self.run_worker(screen.refresh_identities(select_pk=identity.private_key))
 
         self.dismiss()
+
+class EditNameModal(ModalScreen):
+    def __init__(self, current_name: str):
+        super().__init__()
+        self.current_name = current_name
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Label("Edit Name:"),
+            Input(value=self.current_name, id="new_name"),
+            Horizontal(
+                Button("Cancel", id="cancel"),
+                Button("Save", id="save", variant="primary")
+            ),
+            id="modal_container"
+        )
+
+    @on(Button.Pressed, "#cancel")
+    def cancel(self):
+        self.dismiss(None)
+
+    @on(Button.Pressed, "#save")
+    def save(self):
+        name = self.query_one("#new_name").value
+        self.dismiss(name if name else None)
+
+class ConfirmModal(ModalScreen):
+    def __init__(self, message: str):
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        yield Vertical(
+            Label(self.message),
+            Horizontal(
+                Button("No", id="no"),
+                Button("Yes", id="yes", variant="error")
+            ),
+            id="modal_container"
+        )
+
+    @on(Button.Pressed, "#no")
+    def no(self):
+        self.dismiss(False)
+
+    @on(Button.Pressed, "#yes")
+    def yes(self):
+        self.dismiss(True)
 
 class NewBoardModal(ModalScreen):
     def compose(self) -> ComposeResult:

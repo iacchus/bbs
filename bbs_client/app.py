@@ -9,13 +9,19 @@ import asyncio
 from .database import init_db, get_all_identities, add_identity, IdentityRecord, delete_identity, update_identity_name
 from .auth import generate_identity, Identity
 from .api import BBSClient
+from .servers import load_servers, save_servers
+import uuid
 
 class ConnectionManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Vertical(
-            Label("Server URL:"),
-            Input(placeholder="http://localhost:8100", value="http://localhost:8100", id="server_url"),
+            Label("Server:"),
+            Select([], id="server_select", prompt="Select Server"),
+            Horizontal(
+                Button("Manage Servers", id="manage_servers_btn"),
+                classes="button-bar"
+            ),
             Label("Identity:"),
             Select([], id="identity_select", prompt="Select Identity"),
             Horizontal(
@@ -30,7 +36,26 @@ class ConnectionManager(Screen):
         yield Footer()
 
     async def on_mount(self) -> None:
+        self.refresh_servers()
         await self.refresh_identities()
+
+    def refresh_servers(self, select_id: str = None):
+        self.servers = load_servers()
+        options = []
+        for s in self.servers:
+            url = f"http://{s['address']}:{s['port']}"
+            display = f"{s['name']} ({url})"
+            options.append((display, s['id']))
+            
+        select = self.query_one("#server_select")
+        select.set_options(options)
+        
+        if select_id:
+            select.value = select_id
+        elif options:
+            select.value = options[0][1]
+        else:
+            select.clear()
 
     async def refresh_identities(self, select_pk: str = None):
         self.identities = await get_all_identities()
@@ -99,14 +124,27 @@ class ConnectionManager(Screen):
 
         self.app.push_screen(ConfirmModal("Are you sure you want to delete this identity?"), do_delete)
 
+    @on(Button.Pressed, "#manage_servers_btn")
+    def manage_servers(self):
+        def after_manage(result):
+            self.refresh_servers()
+        self.app.push_screen(ServerManager(), after_manage)
+
     @on(Button.Pressed, "#connect_btn")
     async def connect(self):
-        url = self.query_one("#server_url").value
+        server_id = self.query_one("#server_select").value
         private_key = self.query_one("#identity_select").value
 
-        if not url or not private_key:
+        if not server_id or not private_key or server_id == Select.BLANK or private_key == Select.BLANK:
             self.notify("Please select a server and identity.", severity="error")
             return
+            
+        server = next((s for s in self.servers if s['id'] == server_id), None)
+        if not server:
+            self.notify("Server not found.", severity="error")
+            return
+            
+        url = f"http://{server['address']}:{server['port']}"
 
         record = next((i for i in self.identities if i.private_key == private_key), None)
         if not record:
@@ -127,6 +165,140 @@ class ConnectionManager(Screen):
         except Exception as e:
             self.notify(f"Connection error: {e}", severity="error")
 
+
+class ServerModal(ModalScreen):
+    def __init__(self, server: dict = None):
+        super().__init__()
+        self.server = server or {}
+
+    def compose(self) -> ComposeResult:
+        title = "Edit Server" if self.server else "New Server"
+        yield Vertical(
+            Label(title),
+            Label("Name:"),
+            Input(value=self.server.get("name", ""), id="server_name"),
+            Label("Address:"),
+            Input(value=self.server.get("address", ""), id="server_address"),
+            Label("Port:"),
+            Input(value=str(self.server.get("port", "8100")), id="server_port"),
+            Horizontal(
+                Button("Cancel", id="cancel"),
+                Button("Save", id="save", variant="primary")
+            ),
+            id="modal_container"
+        )
+
+    @on(Button.Pressed, "#cancel")
+    def cancel(self):
+        self.dismiss(None)
+
+    @on(Button.Pressed, "#save")
+    def save(self):
+        name = self.query_one("#server_name").value
+        address = self.query_one("#server_address").value
+        port_str = self.query_one("#server_port").value
+
+        if not name or not address or not port_str:
+            self.notify("All fields required.", severity="error")
+            return
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            self.notify("Port must be a number.", severity="error")
+            return
+
+        self.dismiss({
+            "id": self.server.get("id", str(uuid.uuid4())),
+            "name": name,
+            "address": address,
+            "port": port
+        })
+
+class ServerManager(Screen):
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Label("Server Manager", id="screen_title")
+        yield DataTable(id="server_table")
+        yield Horizontal(
+            Button("Back", id="back_btn"),
+            Button("New Server", id="new_server_btn"),
+            Button("Edit Selected", id="edit_server_btn", disabled=True),
+            Button("Delete Selected", id="delete_server_btn", variant="error", disabled=True),
+            classes="button-bar"
+        )
+        yield Footer()
+
+    def on_mount(self):
+        table = self.query_one("#server_table")
+        table.add_columns("Name", "Address", "Port")
+        table.cursor_type = "row"
+        self.load_table()
+
+    def load_table(self):
+        self.servers = load_servers()
+        table = self.query_one("#server_table")
+        table.clear()
+        for s in self.servers:
+            table.add_row(s["name"], s["address"], str(s["port"]), key=s["id"])
+            
+        has_rows = len(table.rows) > 0
+        if not has_rows:
+            self.query_one("#edit_server_btn").disabled = True
+            self.query_one("#delete_server_btn").disabled = True
+
+    @on(DataTable.RowSelected, "#server_table")
+    def on_row_selected(self, event: DataTable.RowSelected):
+        self.query_one("#edit_server_btn").disabled = False
+        self.query_one("#delete_server_btn").disabled = False
+
+    @on(Button.Pressed, "#back_btn")
+    def back(self):
+        self.dismiss(True)
+
+    @on(Button.Pressed, "#new_server_btn")
+    def new_server(self):
+        def after_new(server_data):
+            if server_data:
+                self.servers.append(server_data)
+                save_servers(self.servers)
+                self.load_table()
+        self.app.push_screen(ServerModal(), after_new)
+
+    @on(Button.Pressed, "#edit_server_btn")
+    def edit_server(self):
+        table = self.query_one("#server_table")
+        if table.cursor_row is None:
+            return
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        server_id = row_key.value
+        server = next((s for s in self.servers if s["id"] == server_id), None)
+        if server:
+            def after_edit(server_data):
+                if server_data:
+                    for i, s in enumerate(self.servers):
+                        if s["id"] == server_id:
+                            self.servers[i] = server_data
+                            break
+                    save_servers(self.servers)
+                    self.load_table()
+            self.app.push_screen(ServerModal(server), after_edit)
+
+    @on(Button.Pressed, "#delete_server_btn")
+    def delete_server(self):
+        table = self.query_one("#server_table")
+        if table.cursor_row is None:
+            return
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        server_id = row_key.value
+        
+        def do_delete(confirmed):
+            if confirmed:
+                self.servers = [s for s in self.servers if s["id"] != server_id]
+                save_servers(self.servers)
+                self.load_table()
+                
+        self.app.push_screen(ConfirmModal("Are you sure you want to delete this server?"), do_delete)
 
 class NewIdentityModal(ModalScreen):
     def compose(self) -> ComposeResult:
@@ -531,7 +703,7 @@ class BBSApp(App):
             self.notify("Press Ctrl+C again to exit", timeout=2)
 
     CSS = """
-    ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal, EditNameModal, ConfirmModal {
+    ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal, EditNameModal, ConfirmModal, ServerManager, ServerModal {
         align: center top;
     }
 

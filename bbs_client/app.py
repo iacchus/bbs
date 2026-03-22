@@ -278,35 +278,51 @@ class ThreadView(Screen):
 
         try:
             data = await self.app.client.get_thread(self.thread_id)
-            thread = data.get("thread", {})
+            op = data.get("thread", {})
             posts = data.get("posts", [])
 
-            # Display OP
-            container.mount(Label(f"Title: {thread.get('title')}", classes="thread_title"))
-            content = thread.get("content", "")
-            author = thread.get("author_pubkey", "")[:8]
-            op_id = thread.get("id")
+            if not op:
+                self.notify("Thread not found.", severity="error")
+                return
 
-            op_widget = Vertical(
-                    Label(f"#{op_id} by {author} (OP)", classes="post_header"),
-                    Static(content, classes="post_content"),
-                    classes="post_item"
-            )
-            container.mount(op_widget)
+            # 1. Build a parent -> children map
+            # We treat the OP as the root. All top-level replies have reply_to_id == op["id"]
+            children_map = {}
+            all_posts = {p["id"]: p for p in posts}
+            all_posts[op["id"]] = op
 
-            # Display Replies
-            for post in posts:
+            for p in posts:
+                parent_id = p.get("reply_to_id")
+                if parent_id:
+                    children_map.setdefault(parent_id, []).append(p)
+
+            # 2. Recursive render function
+            def render_post(post, depth=0):
                 content = post.get("content", "")
                 author = post.get("author_pubkey", "")[:8]
                 pid = post.get("id")
+                is_op = (pid == self.thread_id)
 
+                # Indent 2 chars per level, cap at 40 chars (~50% of 80 chars)
+                # Textual handles '2ch' style units in styles.
+                indent = min(depth * 2, 40)
+                
                 post_widget = Vertical(
-                    Label(f"#{pid} by {author}", classes="post_header"),
+                    Label(f"#{pid} by {author}{' (OP)' if is_op else ''}", classes="post_header"),
                     Static(content, classes="post_content"),
                     Button("Reply", id=f"reply_{pid}", classes="reply_small_btn"),
                     classes="post_item"
                 )
+                post_widget.styles.margin = (0, 0, 1, indent) # (top, right, bottom, left)
+
                 container.mount(post_widget)
+
+                # Render children
+                for child in children_map.get(pid, []):
+                    render_post(child, depth + 1)
+
+            # Start rendering from OP
+            render_post(op, depth=0)
 
         except Exception as e:
             self.notify(f"Error loading thread: {e}", severity="error")

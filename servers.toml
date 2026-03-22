@@ -1,6 +1,0 @@
-[[servers]]
-id = "d07a3716-fd52-401d-868f-5989fde76275"
-name = "local"
-address = "http://127.0.0.1"
-port = 8100
-

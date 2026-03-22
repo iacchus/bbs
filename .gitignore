@@ -1,5 +1,7 @@
 gitignored/
 
+*.toml
+
 *.db
 *.sqlite
 *.sqlite3

@@ -303,17 +303,6 @@ class ThreadView(Screen):
                 is_op = (pid == self.thread_id)
                 color = line_colors[depth % len(line_colors)]
 
-                # branch holds THIS post AND all its children
-                # The left border here will span the entire height of this branch
-                branch = Vertical(classes="thread_branch")
-                # Minimum horizontal area logic: 
-                # Each indent is small (1 or 2 ch). 
-                # Since we are nesting Vertical containers, they naturally indent.
-                # We limit the indent if depth is too high.
-                branch.styles.border_left = ("solid", color)
-                branch.styles.margin = (0, 0, 0, 1 if depth > 0 else 0)
-                branch.styles.padding = (0, 0, 0, 1)
-
                 # The actual post content
                 post_widget = Vertical(
                     Label(f"#{pid} by {author}{' (OP)' if is_op else ''}", classes="post_header"),
@@ -321,11 +310,17 @@ class ThreadView(Screen):
                     Button("Reply", id=f"reply_{pid}", classes="reply_small_btn"),
                     classes="post_item"
                 )
-                branch.mount(post_widget)
 
-                # Recursively mount children into THIS branch
-                for child in children_map.get(pid, []):
-                    branch.mount(render_post(child, depth + 1))
+                # Recursively get children widgets
+                child_widgets = [render_post(child, depth + 1) for child in children_map.get(pid, [])]
+
+                # Create the branch container with post and children as initial widgets
+                branch = Vertical(post_widget, *child_widgets, classes="thread_branch")
+                
+                # Styles
+                branch.styles.border_left = ("solid", color)
+                branch.styles.margin = (0, 0, 0, 1 if depth > 0 else 0)
+                branch.styles.padding = (0, 0, 0, 1)
                 
                 return branch
 

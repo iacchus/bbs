@@ -40,23 +40,28 @@ class ConnectionManager(Screen):
         
         if select_pk:
             select.value = select_pk
-        elif options and not select.value:
+        elif options:
             select.value = options[0][1]
+        else:
+            select.value = Select.BLANK
         
         # 1. Disable buttons if no credential is selected
-        has_selection = select.value is not None
+        has_selection = select.value != Select.BLANK and select.value is not None
         self.query_one("#rename_identity_btn").disabled = not has_selection
         self.query_one("#delete_identity_btn").disabled = not has_selection
 
     @on(Select.Changed, "#identity_select")
-    async def on_identity_change(self, event: Select.Changed):
-        has_selection = event.value is not None
+    def on_identity_change(self, event: Select.Changed):
+        has_selection = event.value != Select.BLANK and event.value is not None
         self.query_one("#rename_identity_btn").disabled = not has_selection
         self.query_one("#delete_identity_btn").disabled = not has_selection
 
     @on(Button.Pressed, "#new_identity_btn")
     def new_identity(self):
-        self.app.push_screen(NewIdentityModal())
+        def after_create(result):
+            if result:
+                self.run_worker(self.refresh_identities(select_pk=result))
+        self.app.push_screen(NewIdentityModal(), after_create)
 
     @on(Button.Pressed, "#rename_identity_btn")
     async def rename_identity(self):
@@ -150,11 +155,7 @@ class NewIdentityModal(ModalScreen):
         await add_identity(identity.name, identity.private_key, identity.public_key)
         self.notify(f"Identity '{name}' created!")
 
-        screen = self.app.get_screen("connection")
-        if isinstance(screen, ConnectionManager):
-             self.run_worker(screen.refresh_identities(select_pk=identity.private_key))
-
-        self.dismiss()
+        self.dismiss(identity.private_key)
 
 class EditNameModal(ModalScreen):
     def __init__(self, current_name: str):

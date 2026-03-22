@@ -20,8 +20,8 @@ class ConnectionManager(Screen):
             Select([], id="identity_select", prompt="Select Identity"),
             Horizontal(
                 Button("New", id="new_identity_btn"),
-                Button("Rename", id="rename_identity_btn"),
-                Button("Delete", id="delete_identity_btn", variant="error"),
+                Button("Rename", id="rename_identity_btn", disabled=True),
+                Button("Delete", id="delete_identity_btn", variant="error", disabled=True),
                 classes="button-bar"
             ),
             Button("Connect", id="connect_btn", variant="primary"),
@@ -37,10 +37,22 @@ class ConnectionManager(Screen):
         options = [(i.name, i.private_key) for i in self.identities]
         select = self.query_one("#identity_select")
         select.set_options(options)
+        
         if select_pk:
             select.value = select_pk
         elif options and not select.value:
             select.value = options[0][1]
+        
+        # 1. Disable buttons if no credential is selected
+        has_selection = select.value is not None
+        self.query_one("#rename_identity_btn").disabled = not has_selection
+        self.query_one("#delete_identity_btn").disabled = not has_selection
+
+    @on(Select.Changed, "#identity_select")
+    async def on_identity_change(self, event: Select.Changed):
+        has_selection = event.value is not None
+        self.query_one("#rename_identity_btn").disabled = not has_selection
+        self.query_one("#delete_identity_btn").disabled = not has_selection
 
     @on(Button.Pressed, "#new_identity_btn")
     def new_identity(self):
@@ -508,7 +520,7 @@ class BBSApp(App):
             self.notify("Press Ctrl+C again to exit", timeout=2)
 
     CSS = """
-    ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal {
+    ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal, EditNameModal, ConfirmModal {
         align: center top;
     }
 

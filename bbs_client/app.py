@@ -43,16 +43,16 @@ class ConnectionManager(Screen):
         elif options:
             select.value = options[0][1]
         else:
-            select.value = Select.BLANK
+            select.clear()
         
         # 1. Disable buttons if no credential is selected
-        has_selection = select.value != Select.BLANK and select.value is not None
+        has_selection = not select.is_blank()
         self.query_one("#rename_identity_btn").disabled = not has_selection
         self.query_one("#delete_identity_btn").disabled = not has_selection
 
     @on(Select.Changed, "#identity_select")
     def on_identity_change(self, event: Select.Changed):
-        has_selection = event.value != Select.BLANK and event.value is not None
+        has_selection = not self.query_one("#identity_select").is_blank()
         self.query_one("#rename_identity_btn").disabled = not has_selection
         self.query_one("#delete_identity_btn").disabled = not has_selection
 

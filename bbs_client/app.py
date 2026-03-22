@@ -440,6 +440,9 @@ class BBSApp(App):
         text-style: bold;
         padding: 1;
     }
+    #board_table, #thread_table, #posts_container {
+        height: 1fr;
+    }
     """
 
     SCREENS = {

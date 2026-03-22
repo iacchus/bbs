@@ -540,10 +540,16 @@ class PostItem(Vertical):
     def compose(self) -> ComposeResult:
         yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
         yield Static(self.post_content, classes="post_content")
+        
+        expand_btn = Button(f"+ (expand {self.children_count} replies)", id=f"expand_{self.pid}", classes="expand_btn hidden")
+        expand_btn.can_focus = False
+        reply_btn = Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
+        reply_btn.can_focus = False
+        
         yield Horizontal(
-            Button(f"+ (expand {self.children_count} replies)", id=f"expand_{self.pid}", classes="expand_btn hidden"),
+            expand_btn,
             Static(classes="reply_spacer"),
-            Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn"),
+            reply_btn,
             classes="reply_container"
         )
 

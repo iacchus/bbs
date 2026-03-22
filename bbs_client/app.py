@@ -6,7 +6,7 @@ from textual import on, work
 from textual.reactive import reactive
 import asyncio
 
-from .database import init_db, get_all_identities, add_identity, IdentityRecord
+from .database import init_db, get_all_identities, add_identity, IdentityRecord, delete_identity, update_identity_name
 from .auth import generate_identity, Identity
 from .api import BBSClient
 
@@ -18,23 +18,69 @@ class ConnectionManager(Screen):
             Input(placeholder="http://localhost:8100", value="http://localhost:8100", id="server_url"),
             Label("Identity:"),
             Select([], id="identity_select", prompt="Select Identity"),
-            Button("New Identity", id="new_identity_btn"),
+            Horizontal(
+                Button("New", id="new_identity_btn"),
+                Button("Rename", id="rename_identity_btn"),
+                Button("Delete", id="delete_identity_btn", variant="error"),
+                classes="button-bar"
+            ),
             Button("Connect", id="connect_btn", variant="primary"),
             id="connection_form"
         )
         yield Footer()
 
     async def on_mount(self) -> None:
+        await self.refresh_identities()
+
+    async def refresh_identities(self, select_pk: str = None):
         self.identities = await get_all_identities()
         options = [(i.name, i.private_key) for i in self.identities]
         select = self.query_one("#identity_select")
         select.set_options(options)
-        if options:
-            select.value = options[0][1] # Select first by default
+        if select_pk:
+            select.value = select_pk
+        elif options and not select.value:
+            select.value = options[0][1]
 
     @on(Button.Pressed, "#new_identity_btn")
     def new_identity(self):
         self.app.push_screen(NewIdentityModal())
+
+    @on(Button.Pressed, "#rename_identity_btn")
+    async def rename_identity(self):
+        pk = self.query_one("#identity_select").value
+        if not pk:
+            self.notify("No identity selected", severity="error")
+            return
+        
+        identity = next(i for i in self.identities if i.private_key == pk)
+        
+        def do_rename(new_name):
+            if new_name:
+                async def run_rename():
+                    await update_identity_name(pk, new_name)
+                    await self.refresh_identities(select_pk=pk)
+                    self.notify(f"Identity renamed to {new_name}")
+                self.run_worker(run_rename())
+
+        self.app.push_screen(EditNameModal(identity.name), do_rename)
+
+    @on(Button.Pressed, "#delete_identity_btn")
+    async def confirm_delete(self):
+        pk = self.query_one("#identity_select").value
+        if not pk:
+            self.notify("No identity selected", severity="error")
+            return
+
+        def do_delete(confirmed):
+            if confirmed:
+                async def run_delete():
+                    await delete_identity(pk)
+                    await self.refresh_identities()
+                    self.notify("Identity deleted")
+                self.run_worker(run_delete())
+
+        self.app.push_screen(ConfirmModal("Are you sure you want to delete this identity?"), do_delete)
 
     @on(Button.Pressed, "#connect_btn")
     async def connect(self):

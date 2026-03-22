@@ -142,7 +142,8 @@ class BoardList(Screen):
         yield DataTable(id="board_table")
         yield Horizontal(
             Button("Refresh", id="refresh_btn"),
-            Button("New Board", id="new_board_btn", classes="hidden" if self.app.client.role != "admin" else "")
+            Button("New Board", id="new_board_btn", classes="hidden" if self.app.client.role != "admin" else ""),
+            classes="button-bar"
         )
         yield Footer()
 
@@ -198,7 +199,8 @@ class ThreadList(Screen):
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("Refresh", id="refresh_btn"),
-            Button("New Thread", id="new_thread_btn")
+            Button("New Thread", id="new_thread_btn"),
+            classes="button-bar"
         )
         yield Footer()
 
@@ -250,7 +252,8 @@ class ThreadView(Screen):
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("Refresh", id="refresh_btn"),
-            Button("Reply to Thread", id="reply_btn")
+            Button("Reply to Thread", id="reply_btn"),
+            classes="button-bar"
         )
         yield Footer()
 
@@ -442,6 +445,10 @@ class BBSApp(App):
     }
     #board_table, #thread_table, #posts_container {
         height: 1fr;
+    }
+    .button-bar {
+        height: auto;
+        max-height: 4;
     }
     """
 

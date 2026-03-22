@@ -524,6 +524,8 @@ class PostItem(Vertical):
         Binding("space", "toggle_collapse", "Toggle Collapse"),
         Binding("down", "focus_next", "Next", show=False),
         Binding("up", "focus_previous", "Previous", show=False),
+        Binding("j", "focus_next", "Next (vim)", show=False),
+        Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
     def __init__(self, pid: int, author: str, content: str, is_op: bool, **kwargs):

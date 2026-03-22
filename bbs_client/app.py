@@ -43,7 +43,7 @@ class ConnectionManager(Screen):
         self.servers = load_servers()
         options = []
         for s in self.servers:
-            url = f"http://{s['address']}:{s['port']}"
+            url = f"{s['address']}:{s['port']}"
             display = f"{s['name']} ({url})"
             options.append((display, s['id']))
             
@@ -144,7 +144,7 @@ class ConnectionManager(Screen):
             self.notify("Server not found.", severity="error")
             return
             
-        url = f"http://{server['address']}:{server['port']}"
+        url = f"{server['address']}:{server['port']}"
 
         record = next((i for i in self.identities if i.private_key == private_key), None)
         if not record:

@@ -421,10 +421,11 @@ class ThreadView(Screen):
                 branch = Vertical(post_widget, *child_widgets, classes="thread_branch")
                 
                 # Styles
-                branch.styles.border_left = ("solid", color)
-                # Nesting indents them naturally by adding a small margin
-                branch.styles.margin = (0, 0, 0, 1 if depth > 0 else 0)
-                branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
+                if depth > 0:
+                    branch.styles.border_left = ("solid", color)
+                    # Nesting indents them naturally by adding a small margin
+                    branch.styles.margin = (0, 0, 0, 1)
+                    branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
                 branch.styles.height = "auto"
                 
                 return branch

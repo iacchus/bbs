@@ -8,6 +8,7 @@ class BBSClient:
         self.base_url = base_url.rstrip('/')
         self.client = httpx.AsyncClient(base_url=self.base_url)
         self.identity: Optional[Identity] = None
+        self.role: Optional[str] = None
 
     async def close(self):
         await self.client.aclose()
@@ -33,6 +34,9 @@ class BBSClient:
             payload = {"public_key": pub_key, "signature": signature}
             resp = await self.client.post("/user/register", json=payload)
             resp.raise_for_status()
+            
+            data = resp.json()
+            self.role = data.get("role", "user")
 
             return True
         except Exception as e:

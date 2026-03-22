@@ -142,11 +142,17 @@ class BoardList(Screen):
         yield DataTable(id="board_table")
         yield Horizontal(
             Button("Refresh", id="refresh_btn"),
-            Button("New Board", id="new_board_btn")
+            Button("New Board", id="new_board_btn", classes="hidden" if self.app.client.role != "admin" else "")
         )
         yield Footer()
 
     async def on_mount(self) -> None:
+        # Update header with role
+        header = self.query_one(Header)
+        header.tall = True
+        if self.app.client.identity:
+            header.screen_title = f"BBS - Logged in as {self.app.client.identity.name} ({self.app.client.role})"
+        
         table = self.query_one("#board_table")
         table.add_columns("ID", "Name", "Description")
         table.cursor_type = "row"

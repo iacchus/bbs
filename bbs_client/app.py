@@ -388,8 +388,8 @@ class ThreadView(Screen):
                 self.notify("Thread not found.", severity="error")
                 return
 
-            # Colors for nested lines
-            line_colors = ["dodgerblue", "springgreen", "gold", "crimson", "hotpink"]
+            # Colors for nested lines, using Textual theme variables
+            line_colors = ["$primary", "$secondary", "$success", "$warning", "$error", "$accent"]
 
             # 1. Build a parent -> children map
             children_map = {}
@@ -404,7 +404,6 @@ class ThreadView(Screen):
                 author = post.get("author_pubkey", "")[:8]
                 pid = post.get("id")
                 is_op = (pid == self.thread_id)
-                color = line_colors[depth % len(line_colors)]
 
                 # The actual post content
                 post_widget = Vertical(
@@ -414,6 +413,12 @@ class ThreadView(Screen):
                     classes="post_item"
                 )
 
+                if depth == 0:
+                    # Separate OP from its replies with a thin bottom border
+                    post_widget.styles.border_bottom = ("solid", "$primary 30%")
+                    post_widget.styles.margin = (0, 0, 1, 0)
+                    post_widget.styles.padding = (0, 0, 1, 0)
+
                 # Recursively get children widgets
                 child_widgets = [render_post(child, depth + 1) for child in children_map.get(pid, [])]
 
@@ -421,11 +426,18 @@ class ThreadView(Screen):
                 branch = Vertical(post_widget, *child_widgets, classes="thread_branch")
                 
                 # Styles
-                if depth > 0:
+                if depth > 1:
+                    color = line_colors[(depth - 2) % len(line_colors)]
                     branch.styles.border_left = ("solid", color)
                     # Nesting indents them naturally by adding a small margin
                     branch.styles.margin = (0, 0, 0, 1)
                     branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
+                elif depth == 1:
+                    # Separate each first-level reply (and its children) from the next
+                    branch.styles.border_bottom = ("solid", "$primary 30%")
+                    branch.styles.margin = (0, 0, 1, 0)
+                    branch.styles.padding = (0, 0, 1, 0)
+
                 branch.styles.height = "auto"
                 
                 return branch

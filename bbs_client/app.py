@@ -536,7 +536,17 @@ class PostItem(Vertical):
     def compose(self) -> ComposeResult:
         yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
         yield Static(self.post_content, classes="post_content")
-        yield Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
+        yield Horizontal(
+            Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn"),
+            classes="reply_container"
+        )
+
+    def on_focus(self, event: events.Focus):
+        try:
+            container = self.app.query_one("#posts_container", VerticalScroll)
+            container.scroll_to_widget(self, center=True)
+        except Exception:
+            pass
 
     async def on_click(self, event: events.Click):
         if isinstance(event.widget, Label) and event.widget.has_class("post_header"):
@@ -794,6 +804,14 @@ class BBSApp(App):
         min-width: 10;
         height: 1;
         border: none;
+    }
+    .reply_container {
+        display: none;
+        height: auto;
+        align: right middle;
+    }
+    .post_item:focus .reply_container {
+        display: block;
     }
     .hidden {
         display: none;

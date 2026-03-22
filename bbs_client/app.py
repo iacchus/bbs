@@ -227,7 +227,10 @@ class ThreadList(Screen):
 
     @on(Button.Pressed, "#new_thread_btn")
     def new_thread(self):
-        self.app.push_screen(ComposeModal(board_id=self.board_id))
+        def after_submit(result):
+            if result:
+                self.run_worker(self.load_threads())
+        self.app.push_screen(ComposeModal(board_id=self.board_id), after_submit)
 
     @on(DataTable.RowSelected)
     def on_row_selected(self, event: DataTable.RowSelected):
@@ -260,8 +263,10 @@ class ThreadView(Screen):
 
     @on(Button.Pressed, "#reply_btn")
     def reply(self):
-        # Reply to OP (thread_id)
-        self.app.push_screen(ComposeModal(thread_id=self.thread_id))
+        def after_submit(result):
+            if result:
+                self.run_worker(self.load_thread())
+        self.app.push_screen(ComposeModal(thread_id=self.thread_id), after_submit)
 
     @on(Button.Pressed, "#refresh_btn")
     async def load_thread(self):
@@ -308,8 +313,11 @@ class ThreadView(Screen):
         if event.button.id and event.button.id.startswith("reply_"):
             try:
                 post_id = int(event.button.id.split("_")[1])
+                def after_submit(result):
+                    if result:
+                        self.run_worker(self.load_thread())
                 # Reply to a specific post
-                self.app.push_screen(ComposeModal(thread_id=self.thread_id, parent_id=post_id))
+                self.app.push_screen(ComposeModal(thread_id=self.thread_id, parent_id=post_id), after_submit)
             except:
                 pass
 

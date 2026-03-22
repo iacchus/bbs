@@ -548,11 +548,14 @@ class PostItem(Vertical):
         )
 
     def on_focus(self, event: events.Focus):
-        try:
-            container = self.app.query_one("#posts_container", VerticalScroll)
-            container.scroll_to_widget(self, center=True)
-        except Exception:
-            pass
+        def do_scroll():
+            try:
+                container = self.app.query_one("#posts_container", VerticalScroll)
+                container.scroll_to_center(self)
+            except Exception:
+                pass
+        # Small delay to let the layout recalculate after display changes
+        self.set_timer(0.05, do_scroll)
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):

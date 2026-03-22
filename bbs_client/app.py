@@ -415,7 +415,7 @@ class ThreadView(Screen):
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
-                    post_widget.styles.border_bottom = ("solid", "$primary 30%")
+                    post_widget.add_class("bottom_separator")
                     post_widget.styles.margin = (0, 0, 1, 0)
                     post_widget.styles.padding = (0, 0, 1, 0)
 
@@ -434,7 +434,7 @@ class ThreadView(Screen):
                     branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
                 elif depth == 1:
                     # Separate each first-level reply (and its children) from the next
-                    branch.styles.border_bottom = ("solid", "$primary 30%")
+                    branch.add_class("bottom_separator")
                     branch.styles.margin = (0, 0, 1, 0)
                     branch.styles.padding = (0, 0, 1, 0)
 
@@ -581,6 +581,9 @@ class BBSApp(App):
         text-align: center;
         text-style: bold;
         padding: 1;
+    }
+    .bottom_separator {
+        border-bottom: solid $primary 30%;
     }
     #board_table, #thread_table, #posts_container {
         height: 1fr;

@@ -1,4 +1,5 @@
 import httpx
+import re
 from typing import List, Dict, Any, Optional
 from .auth import Identity
 
@@ -50,10 +51,11 @@ class BBSClient:
 
     async def create_board(self, name: str, description: str) -> Dict[str, Any]:
         try:
-            payload = {"name": name, "description": description}
+            slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+            payload = {"name": name, "description": description, "slug": slug}
             # Attempt to create a board using a standard REST endpoint.
             # If the server endpoint is different, this needs to be updated.
-            resp = await self.client.post("/boards", json=payload)
+            resp = await self.client.post("/", json=payload)
             resp.raise_for_status()
             return resp.json()
         except Exception as e:

@@ -834,10 +834,12 @@ class BBSApp(App):
         width: 1fr;
     }
     .reply_container {
-        display: none;
         height: auto;
     }
-    .post_item:focus .reply_container {
+    .reply_small_btn {
+        display: none;
+    }
+    .post_item:focus .reply_small_btn {
         display: block;
     }
     .hidden {

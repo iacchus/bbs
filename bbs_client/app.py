@@ -514,8 +514,8 @@ class BBSApp(App):
         height: 1fr;
     }
     .button-bar {
-        height: auto;
-        max-height: 4;
+        height: 3;
+        margin: 1 0;
     }
     """
 

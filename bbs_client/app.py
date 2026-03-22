@@ -319,8 +319,10 @@ class ThreadView(Screen):
                 
                 # Styles
                 branch.styles.border_left = ("solid", color)
+                # Nesting indents them naturally by adding a small margin
                 branch.styles.margin = (0, 0, 0, 1 if depth > 0 else 0)
-                branch.styles.padding = (0, 0, 0, 1)
+                branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
+                branch.styles.height = "auto"
                 
                 return branch
 
@@ -436,8 +438,11 @@ class BBSApp(App):
         margin-top: 5;
     }
     .post_item {
-        margin: 0 0 1 0;
-        padding: 0 0 0 1;
+        margin: 0;
+        padding: 0 0 1 0;
+        height: auto;
+    }
+    .thread_branch {
         height: auto;
     }
     .post_header {

@@ -388,9 +388,6 @@ class ThreadView(Screen):
                 self.notify("Thread not found.", severity="error")
                 return
 
-            # Colors for nested lines, using Textual theme variables
-            line_colors = ["$primary", "$secondary", "$success", "$warning", "$error", "$accent"]
-
             # 1. Build a parent -> children map
             children_map = {}
             for p in posts:
@@ -427,8 +424,8 @@ class ThreadView(Screen):
                 
                 # Styles
                 if depth > 1:
-                    color = line_colors[(depth - 2) % len(line_colors)]
-                    branch.styles.border_left = ("solid", color)
+                    color_idx = (depth - 2) % 6
+                    branch.add_class(f"thread_border_{color_idx}")
                     # Nesting indents them naturally by adding a small margin
                     branch.styles.margin = (0, 0, 0, 1)
                     branch.styles.padding = (0, 0, 0, 1) # (top, right, bottom, left)
@@ -585,6 +582,12 @@ class BBSApp(App):
     .bottom_separator {
         border-bottom: solid $primary 30%;
     }
+    .thread_border_0 { border-left: solid $primary; }
+    .thread_border_1 { border-left: solid $secondary; }
+    .thread_border_2 { border-left: solid $success; }
+    .thread_border_3 { border-left: solid $warning; }
+    .thread_border_4 { border-left: solid $error; }
+    .thread_border_5 { border-left: solid $accent; }
     #board_table, #thread_table, #posts_container {
         height: 1fr;
     }

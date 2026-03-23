@@ -7,10 +7,10 @@ from textual.binding import Binding
 from textual.reactive import reactive
 import asyncio
 
-from .identities import get_all_identities_sync, add_identity_sync, IdentityRecord, delete_identity_sync, update_identity_name_sync
-from .auth import generate_identity, Identity
-from .api import BBSClient
-from .servers import load_servers, save_servers
+from bbs_client.identities import get_all_identities_sync, add_identity_sync, IdentityRecord, delete_identity_sync, update_identity_name_sync
+from bbs_client.auth import generate_identity, Identity
+from bbs_client.api import BBSClient
+from bbs_client.servers import load_servers, save_servers
 import uuid
 
 class ConnectionManager(Screen):

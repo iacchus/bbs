@@ -558,17 +558,27 @@ class PostItem(Vertical):
         Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
-    def __init__(self, pid: int, author: str, content: str, is_op: bool, children_count: int = 0, **kwargs):
+    def __init__(self, pid: int, author: str, content: str, is_op: bool, created_at: str, children_count: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.pid = pid
         self.author = author
         self.post_content = content
         self.is_op = is_op
+        self.created_at = created_at
         self.children_count = children_count
         self.is_collapsed = False
 
     def compose(self) -> ComposeResult:
-        yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
+        # Format the timestamp (strip decimals and T if present)
+        # Assuming ISO format like 2023-10-27T10:20:30.123456
+        display_time = self.created_at.replace("T", " ").split(".")[0]
+        
+        yield Horizontal(
+            Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header_info"),
+            Static(classes="reply_spacer"),
+            Label(display_time, classes="post_time"),
+            classes="post_header"
+        )
         yield Static(self.post_content, classes="post_content")
         
         expand_btn = Button(f" expand {self.children_count} replies ", id=f"expand_{self.pid}", classes="expand_btn hidden")
@@ -700,7 +710,15 @@ class ThreadView(Screen):
                 children_count = get_total_children(pid)
 
                 # The actual post content
-                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, children_count=children_count, classes="post_item")
+                post_widget = PostItem(
+                    pid=pid, 
+                    author=author, 
+                    content=content, 
+                    is_op=is_op, 
+                    created_at=post.get("created_at", ""),
+                    children_count=children_count, 
+                    classes="post_item"
+                )
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
@@ -863,7 +881,17 @@ class BBSApp(App):
     .post_header {
         background: $primary;
         color: $text;
+        height: 1;
+        width: 100%;
+        padding: 0;
+    }
+    .post_header_info {
         padding: 0 1;
+        text-style: bold;
+    }
+    .post_time {
+        padding: 0 1;
+        color: $text-muted;
     }
     .post_content {
         padding: 1;

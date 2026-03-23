@@ -181,6 +181,7 @@ class ServerManager(Screen):
 
     def on_mount(self):
         table = self.query_one("#server_table")
+        table.fixed_row_height = 4
         table.add_columns("Name", "Address", "Port")
         table.cursor_type = "row"
         self.load_table()
@@ -265,6 +266,7 @@ class IdentityManager(Screen):
 
     async def on_mount(self) -> None:
         table = self.query_one("#identity_table")
+        table.fixed_row_height = 4
         table.add_columns("Name", "Public Key (partial)")
         table.cursor_type = "row"
         self.load_table()
@@ -458,14 +460,8 @@ class BoardList(Screen):
         self.app.pop_screen() # Should go back to connection manager if it was pushed
 
     async def on_mount(self) -> None:
-        # Update header with role
-        header = self.query_one(Header)
-        header.tall = True
-        if self.app.client.identity:
-            self.title = f"BBS - {self.app.client.identity.name}"
-            self.sub_title = f"Role: {self.app.client.role}"
-        
         table = self.query_one("#board_table")
+        table.fixed_row_height = 4
         table.add_columns("Name", "Description")
         table.cursor_type = "row"
         await self.load_boards()
@@ -513,6 +509,7 @@ class ThreadList(Screen):
 
     async def on_mount(self) -> None:
         table = self.query_one("#thread_table")
+        table.fixed_row_height = 4
         table.add_columns("Title", "Author")
         table.cursor_type = "row"
         await self.load_threads()
@@ -947,7 +944,6 @@ class BBSApp(App):
     }
     DataTable {
         height: 1fr;
-        row-height: 4;
         margin: 0 2;
     }
     DataTable > .datatable--cell {

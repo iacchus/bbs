@@ -169,7 +169,12 @@ class ServerModal(ModalScreen):
 class ServerManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
-        yield DataTable(id="server_table")
+        yield Horizontal(
+            Static(classes="horizontal_spacer"),
+            DataTable(id="server_table", row_height=4),
+            Static(classes="horizontal_spacer"),
+            id="table_container"
+        )
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("New Server", id="new_server_btn"),
@@ -254,7 +259,12 @@ class ServerManager(Screen):
 class IdentityManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
-        yield DataTable(id="identity_table")
+        yield Horizontal(
+            Static(classes="horizontal_spacer"),
+            DataTable(id="identity_table", row_height=4),
+            Static(classes="horizontal_spacer"),
+            id="table_container"
+        )
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("New Identity", id="new_identity_btn"),
@@ -446,7 +456,12 @@ class NewBoardModal(ModalScreen):
 class BoardList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
-        yield DataTable(id="board_table")
+        yield Horizontal(
+            Static(classes="horizontal_spacer"),
+            DataTable(id="board_table", row_height=4),
+            Static(classes="horizontal_spacer"),
+            id="table_container"
+        )
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
             Button("Refresh", id="refresh_btn"),
@@ -508,7 +523,12 @@ class ThreadList(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield DataTable(id="thread_table")
+        yield Horizontal(
+            Static(classes="horizontal_spacer"),
+            DataTable(id="thread_table", row_height=4),
+            Static(classes="horizontal_spacer"),
+            id="table_container"
+        )
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("Refresh", id="refresh_btn"),
@@ -940,15 +960,19 @@ class BBSApp(App):
     .thread_border_3 { border-left: solid $warning; }
     .thread_border_4 { border-left: solid $error; }
     .thread_border_5 { border-left: solid $accent; }
+    #table_container {
+        height: 1fr;
+        width: 100%;
+    }
+    .horizontal_spacer {
+        width: 5%;
+    }
     #board_table, #thread_table, #server_table, #identity_table {
         height: 1fr;
+        width: 90%;
     }
     DataTable {
         height: 1fr;
-        margin: 0 2;
-    }
-    DataTable > .datatable--cell {
-        padding: 0 2;
     }
     #posts_container {
         height: 1fr;

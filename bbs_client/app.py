@@ -15,7 +15,7 @@ import uuid
 
 class ConnectionManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Label("Connection Manager", id="screen_title")
+        yield Header()
         yield Vertical(
             Label("Server:"),
             Select([], id="server_select", prompt="Select Server"),
@@ -168,7 +168,7 @@ class ServerModal(ModalScreen):
 
 class ServerManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Label("Server Manager", id="screen_title")
+        yield Header()
         yield DataTable(id="server_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
@@ -253,7 +253,7 @@ class ServerManager(Screen):
 
 class IdentityManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Label("Identity Manager", id="screen_title")
+        yield Header()
         yield DataTable(id="identity_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
@@ -445,7 +445,7 @@ class NewBoardModal(ModalScreen):
 
 class BoardList(Screen):
     def compose(self) -> ComposeResult:
-        yield Label("Boards", id="screen_title")
+        yield Header()
         yield DataTable(id="board_table")
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
@@ -460,6 +460,16 @@ class BoardList(Screen):
         self.app.pop_screen() # Should go back to connection manager if it was pushed
 
     async def on_mount(self) -> None:
+        try:
+            header = self.query_one(Header)
+            header.tall = True
+        except:
+            pass
+
+        if self.app.client.identity:
+            self.title = f"BBS - {self.app.client.identity.name}"
+            self.sub_title = f"Role: {self.app.client.role}"
+        
         table = self.query_one("#board_table")
         table.fixed_row_height = 4
         table.add_columns("Name", "Description")
@@ -497,7 +507,7 @@ class ThreadList(Screen):
         self.board_id = board_id
 
     def compose(self) -> ComposeResult:
-        yield Label(f"Board {self.board_id}", id="screen_title")
+        yield Header()
         yield DataTable(id="thread_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
@@ -647,7 +657,7 @@ class ThreadView(Screen):
         self.thread_id = thread_id
 
     def compose(self) -> ComposeResult:
-        yield Label("Thread View", id="screen_title")
+        yield Header()
         yield VerticalScroll(id="posts_container")
         yield Horizontal(
             Button("Back", id="back_btn"),
@@ -920,15 +930,6 @@ class BBSApp(App):
     }
     .hidden {
         display: none;
-    }
-    #screen_title {
-        background: $accent;
-        color: $text;
-        text-align: center;
-        text-style: bold;
-        padding: 1 2;
-        margin: 1 2;
-        border: heavy $primary;
     }
     .bottom_separator {
         border-bottom: solid $primary 30%;

@@ -13,6 +13,12 @@ from .api import BBSClient
 from .servers import load_servers, save_servers
 import uuid
 
+class VimDataTable(DataTable):
+    BINDINGS = [
+        Binding("j", "cursor_down", "Down", show=False),
+        Binding("k", "cursor_up", "Up", show=False),
+    ]
+
 class ConnectionManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
@@ -170,7 +176,7 @@ class ServerManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Server Manager", id="screen_title")
-        yield DataTable(id="server_table")
+        yield VimDataTable(id="server_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("New Server", id="new_server_btn"),
@@ -198,8 +204,8 @@ class ServerManager(Screen):
             self.query_one("#edit_server_btn").disabled = True
             self.query_one("#delete_server_btn").disabled = True
 
-    @on(DataTable.RowSelected, "#server_table")
-    def on_row_selected(self, event: DataTable.RowSelected):
+    @on(VimDataTable.RowSelected, "#server_table")
+    def on_row_selected(self, event: VimDataTable.RowSelected):
         self.query_one("#edit_server_btn").disabled = False
         self.query_one("#delete_server_btn").disabled = False
 
@@ -255,7 +261,7 @@ class IdentityManager(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Identity Manager", id="screen_title")
-        yield DataTable(id="identity_table")
+        yield VimDataTable(id="identity_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("New Identity", id="new_identity_btn"),
@@ -283,8 +289,8 @@ class IdentityManager(Screen):
             self.query_one("#rename_identity_btn").disabled = True
             self.query_one("#delete_identity_btn").disabled = True
 
-    @on(DataTable.RowSelected, "#identity_table")
-    def on_row_selected(self, event: DataTable.RowSelected):
+    @on(VimDataTable.RowSelected, "#identity_table")
+    def on_row_selected(self, event: VimDataTable.RowSelected):
         self.query_one("#rename_identity_btn").disabled = False
         self.query_one("#delete_identity_btn").disabled = False
 
@@ -447,7 +453,7 @@ class BoardList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Boards", id="screen_title")
-        yield DataTable(id="board_table")
+        yield VimDataTable(id="board_table")
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
             Button("Refresh", id="refresh_btn"),
@@ -469,7 +475,7 @@ class BoardList(Screen):
             self.sub_title = f"Role: {self.app.client.role}"
         
         table = self.query_one("#board_table")
-        table.add_columns("ID", "Name", "Description")
+        table.add_columns("Name", "Description")
         table.cursor_type = "row"
         await self.load_boards()
 
@@ -480,7 +486,7 @@ class BoardList(Screen):
         try:
             boards = await self.app.client.get_boards()
             for board in boards:
-                table.add_row(board["id"], board["name"], board["description"])
+                table.add_row(board["name"], board["description"], key=str(board["id"]))
         except Exception as e:
             self.notify(f"Error loading boards: {e}", severity="error")
 
@@ -492,11 +498,9 @@ class BoardList(Screen):
 
         self.app.push_screen(NewBoardModal(), after_submit)
 
-    @on(DataTable.RowSelected)
-    def on_row_selected(self, event: DataTable.RowSelected):
-        row_key = event.row_key
-        row = self.query_one("#board_table").get_row(row_key)
-        board_id = row[0]
+    @on(VimDataTable.RowSelected)
+    def on_row_selected(self, event: VimDataTable.RowSelected):
+        board_id = int(event.row_key.value)
         self.app.push_screen(ThreadList(board_id=board_id))
 
 
@@ -508,7 +512,7 @@ class ThreadList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(f"Board {self.board_id}", id="screen_title")
-        yield DataTable(id="thread_table")
+        yield VimDataTable(id="thread_table")
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("Refresh", id="refresh_btn"),
@@ -519,7 +523,7 @@ class ThreadList(Screen):
 
     async def on_mount(self) -> None:
         table = self.query_one("#thread_table")
-        table.add_columns("ID", "Title", "Author")
+        table.add_columns("Title", "Author")
         table.cursor_type = "row"
         await self.load_threads()
 
@@ -536,7 +540,7 @@ class ThreadList(Screen):
             for thread in threads:
                 # Assuming thread is a Post object (OP)
                 # It has title, author_pubkey
-                table.add_row(thread["id"], thread["title"], thread["author_pubkey"][:10]+"...")
+                table.add_row(thread["title"], thread["author_pubkey"][:10]+"...", key=str(thread["id"]))
         except Exception as e:
             self.notify(f"Error loading threads: {e}", severity="error")
 
@@ -547,10 +551,9 @@ class ThreadList(Screen):
                 self.run_worker(self.load_threads())
         self.app.push_screen(ComposeModal(board_id=self.board_id), after_submit)
 
-    @on(DataTable.RowSelected)
-    def on_row_selected(self, event: DataTable.RowSelected):
-        row = self.query_one("#thread_table").get_row(event.row_key)
-        thread_id = row[0]
+    @on(VimDataTable.RowSelected)
+    def on_row_selected(self, event: VimDataTable.RowSelected):
+        thread_id = int(event.row_key.value)
         self.app.push_screen(ThreadView(thread_id=thread_id))
 
 class PostItem(Vertical):
@@ -565,17 +568,19 @@ class PostItem(Vertical):
         Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
-    def __init__(self, pid: int, author: str, content: str, is_op: bool, children_count: int = 0, **kwargs):
+    def __init__(self, pid: int, author: str, content: str, is_op: bool, children_count: int = 0, timestamp: str = "", **kwargs):
         super().__init__(**kwargs)
         self.pid = pid
         self.author = author
         self.post_content = content
         self.is_op = is_op
         self.children_count = children_count
+        self.timestamp = timestamp
         self.is_collapsed = False
 
     def compose(self) -> ComposeResult:
-        yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
+        time_str = f" @ {self.timestamp}" if self.timestamp else ""
+        yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}{time_str}", classes="post_header")
         yield Static(self.post_content, classes="post_content")
         
         expand_btn = Button(f" expand {self.children_count} replies ", id=f"expand_{self.pid}", classes="expand_btn hidden")
@@ -636,12 +641,34 @@ class PostItem(Vertical):
             pass
 
     def action_focus_next(self):
-        self.app.action_focus_next()
+        posts = list(self.screen.query("PostItem"))
+        try:
+            idx = posts.index(self)
+            if idx + 1 < len(posts):
+                posts[idx + 1].focus()
+        except ValueError:
+            pass
 
     def action_focus_previous(self):
-        self.app.action_focus_previous()
+        posts = list(self.screen.query("PostItem"))
+        try:
+            idx = posts.index(self)
+            if idx - 1 >= 0:
+                posts[idx - 1].focus()
+        except ValueError:
+            pass
 
 class ThreadView(Screen):
+    BINDINGS = [
+        Binding("j", "focus_first_post", "Focus Posts", show=False),
+        Binding("k", "focus_first_post", "Focus Posts", show=False),
+    ]
+
+    def action_focus_first_post(self):
+        posts = list(self.query("PostItem"))
+        if posts:
+            posts[0].focus()
+
     def __init__(self, thread_id: int):
         super().__init__()
         self.thread_id = thread_id
@@ -706,9 +733,19 @@ class ThreadView(Screen):
                 pid = post.get("id")
                 is_op = (pid == self.thread_id)
                 children_count = get_total_children(pid)
+                
+                created_at_str = post.get("created_at")
+                timestamp_str = ""
+                if created_at_str:
+                    try:
+                        import datetime
+                        dt = datetime.datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                        timestamp_str = str(int(dt.timestamp()))
+                    except Exception:
+                        pass
 
                 # The actual post content
-                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, children_count=children_count, classes="post_item")
+                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, children_count=children_count, timestamp=timestamp_str, classes="post_item")
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
@@ -921,7 +958,7 @@ class BBSApp(App):
     #board_table, #thread_table, #server_table, #identity_table {
         height: 1fr;
     }
-    DataTable {
+    VimDataTable {
         height: 1fr;
     }
     #posts_container {

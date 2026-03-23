@@ -541,7 +541,7 @@ class PostItem(Vertical):
         yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}", classes="post_header")
         yield Static(self.post_content, classes="post_content")
         
-        expand_btn = Button(f"+ (expand {self.children_count} replies)", id=f"expand_{self.pid}", classes="expand_btn hidden")
+        expand_btn = Button(f" expand {self.children_count} replies ", id=f"expand_{self.pid}", classes="expand_btn hidden")
         expand_btn.can_focus = False
         reply_btn = Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
         reply_btn.can_focus = False
@@ -585,8 +585,10 @@ class PostItem(Vertical):
                 expand_btn = self.query_one(f"#expand_{self.pid}", Button)
                 if self.is_collapsed and self.children_count > 0:
                     expand_btn.remove_class("hidden")
+                    self.add_class("collapsed")
                 else:
                     expand_btn.add_class("hidden")
+                    self.remove_class("collapsed")
             except Exception:
                 pass
                 
@@ -823,6 +825,9 @@ class BBSApp(App):
     .post_item:focus {
         background: $boost;
     }
+    .post_item.collapsed {
+        border-bottom: heavy $primary;
+    }
     .thread_branch {
         height: auto;
     }
@@ -834,10 +839,18 @@ class BBSApp(App):
     .post_content {
         padding: 1;
     }
-    .reply_small_btn, .expand_btn {
+    .reply_small_btn {
         min-width: 10;
         height: 1;
         border: none;
+    }
+    .expand_btn {
+        min-width: 15;
+        height: 1;
+        border: none;
+        background: $primary;
+        color: $text;
+        text-style: bold;
     }
     .reply_spacer {
         width: 1fr;

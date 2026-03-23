@@ -356,11 +356,11 @@ class NewIdentityModal(ModalScreen):
             self.notify("Name required.", severity="error")
             return
 
-        priv, pub = generate_identity()
-        add_identity_sync(name, priv, pub)
+        identity = generate_identity(name)
+        add_identity_sync(name, identity.private_key, identity.public_key)
         self.notify(f"Identity '{name}' created!")
 
-        self.dismiss(priv)
+        self.dismiss(identity.private_key)
 
 class EditNameModal(ModalScreen):
     def __init__(self, current_name: str):

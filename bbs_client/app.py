@@ -171,7 +171,7 @@ class ServerManager(Screen):
         yield Header()
         yield Horizontal(
             Static(classes="horizontal_spacer"),
-            DataTable(id="server_table", row_height=4),
+            DataTable(id="server_table"),
             Static(classes="horizontal_spacer"),
             id="table_container"
         )
@@ -261,7 +261,7 @@ class IdentityManager(Screen):
         yield Header()
         yield Horizontal(
             Static(classes="horizontal_spacer"),
-            DataTable(id="identity_table", row_height=4),
+            DataTable(id="identity_table"),
             Static(classes="horizontal_spacer"),
             id="table_container"
         )
@@ -458,7 +458,7 @@ class BoardList(Screen):
         yield Header()
         yield Horizontal(
             Static(classes="horizontal_spacer"),
-            DataTable(id="board_table", row_height=4),
+            DataTable(id="board_table"),
             Static(classes="horizontal_spacer"),
             id="table_container"
         )
@@ -525,7 +525,7 @@ class ThreadList(Screen):
         yield Header()
         yield Horizontal(
             Static(classes="horizontal_spacer"),
-            DataTable(id="thread_table", row_height=4),
+            DataTable(id="thread_table"),
             Static(classes="horizontal_spacer"),
             id="table_container"
         )

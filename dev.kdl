@@ -12,7 +12,7 @@ layout {
             pane {
                 name "Client"
                 command "python"
-                args "-m" "textual" "run" "--dev" "bbs_client/app.py"
+                args "-m" "textual" "run" "--dev" "bbs_client.app"
             }
             pane {
                 name "Textual Console"

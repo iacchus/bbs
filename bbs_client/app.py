@@ -15,7 +15,7 @@ import uuid
 
 class ConnectionManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield Label("Connection Manager", id="screen_title")
         yield Vertical(
             Label("Server:"),
             Select([], id="server_select", prompt="Select Server"),
@@ -168,7 +168,6 @@ class ServerModal(ModalScreen):
 
 class ServerManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Header()
         yield Label("Server Manager", id="screen_title")
         yield DataTable(id="server_table")
         yield Horizontal(
@@ -253,7 +252,6 @@ class ServerManager(Screen):
 
 class IdentityManager(Screen):
     def compose(self) -> ComposeResult:
-        yield Header()
         yield Label("Identity Manager", id="screen_title")
         yield DataTable(id="identity_table")
         yield Horizontal(
@@ -445,7 +443,6 @@ class NewBoardModal(ModalScreen):
 
 class BoardList(Screen):
     def compose(self) -> ComposeResult:
-        yield Header()
         yield Label("Boards", id="screen_title")
         yield DataTable(id="board_table")
         yield Horizontal(
@@ -469,7 +466,7 @@ class BoardList(Screen):
             self.sub_title = f"Role: {self.app.client.role}"
         
         table = self.query_one("#board_table")
-        table.add_columns("ID", "Name", "Description")
+        table.add_columns("Name", "Description")
         table.cursor_type = "row"
         await self.load_boards()
 
@@ -480,7 +477,7 @@ class BoardList(Screen):
         try:
             boards = await self.app.client.get_boards()
             for board in boards:
-                table.add_row(board["id"], board["name"], board["description"])
+                table.add_row(board["name"], board["description"], key=str(board["id"]))
         except Exception as e:
             self.notify(f"Error loading boards: {e}", severity="error")
 
@@ -494,9 +491,7 @@ class BoardList(Screen):
 
     @on(DataTable.RowSelected)
     def on_row_selected(self, event: DataTable.RowSelected):
-        row_key = event.row_key
-        row = self.query_one("#board_table").get_row(row_key)
-        board_id = row[0]
+        board_id = int(event.row_key.value)
         self.app.push_screen(ThreadList(board_id=board_id))
 
 
@@ -506,7 +501,6 @@ class ThreadList(Screen):
         self.board_id = board_id
 
     def compose(self) -> ComposeResult:
-        yield Header()
         yield Label(f"Board {self.board_id}", id="screen_title")
         yield DataTable(id="thread_table")
         yield Horizontal(
@@ -519,7 +513,7 @@ class ThreadList(Screen):
 
     async def on_mount(self) -> None:
         table = self.query_one("#thread_table")
-        table.add_columns("ID", "Title", "Author")
+        table.add_columns("Title", "Author")
         table.cursor_type = "row"
         await self.load_threads()
 
@@ -536,7 +530,7 @@ class ThreadList(Screen):
             for thread in threads:
                 # Assuming thread is a Post object (OP)
                 # It has title, author_pubkey
-                table.add_row(thread["id"], thread["title"], thread["author_pubkey"][:10]+"...")
+                table.add_row(thread["title"], thread["author_pubkey"][:10]+"...", key=str(thread["id"]))
         except Exception as e:
             self.notify(f"Error loading threads: {e}", severity="error")
 
@@ -549,8 +543,7 @@ class ThreadList(Screen):
 
     @on(DataTable.RowSelected)
     def on_row_selected(self, event: DataTable.RowSelected):
-        row = self.query_one("#thread_table").get_row(event.row_key)
-        thread_id = row[0]
+        thread_id = int(event.row_key.value)
         self.app.push_screen(ThreadView(thread_id=thread_id))
 
 class PostItem(Vertical):
@@ -647,7 +640,6 @@ class ThreadView(Screen):
         self.thread_id = thread_id
 
     def compose(self) -> ComposeResult:
-        yield Header()
         yield Label("Thread View", id="screen_title")
         yield VerticalScroll(id="posts_container")
         yield Horizontal(
@@ -904,10 +896,14 @@ class BBSApp(App):
     .hidden {
         display: none;
     }
-    .thread_title {
+    #screen_title {
+        background: $accent;
+        color: $text;
         text-align: center;
         text-style: bold;
-        padding: 1;
+        padding: 1 2;
+        margin: 1 2;
+        border: heavy $primary;
     }
     .bottom_separator {
         border-bottom: solid $primary 30%;
@@ -923,6 +919,11 @@ class BBSApp(App):
     }
     DataTable {
         height: 1fr;
+        row-height: 4;
+        margin: 0 2;
+    }
+    DataTable > .datatable--cell {
+        padding: 0 2;
     }
     #posts_container {
         height: 1fr;

@@ -14,7 +14,7 @@ dependencies = [
   "pyjwt",
   "python-jose",
   # "sqlmodel",
-  # "starlette",
+  "starlette",
   "toml",
   "uvicorn",
   "textual",

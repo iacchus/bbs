@@ -7,7 +7,7 @@ from textual.binding import Binding
 from textual.reactive import reactive
 import asyncio
 
-from .database import init_db, get_all_identities, add_identity, IdentityRecord, delete_identity, update_identity_name
+from .identities import get_all_identities_sync, add_identity_sync, IdentityRecord, delete_identity_sync, update_identity_name_sync
 from .auth import generate_identity, Identity
 from .api import BBSClient
 from .servers import load_servers, save_servers
@@ -26,9 +26,7 @@ class ConnectionManager(Screen):
             Label("Identity:"),
             Select([], id="identity_select", prompt="Select Identity"),
             Horizontal(
-                Button("New", id="new_identity_btn"),
-                Button("Rename", id="rename_identity_btn", disabled=True),
-                Button("Delete", id="delete_identity_btn", variant="error", disabled=True),
+                Button("Manage Identities", id="manage_identities_btn"),
                 classes="button-bar"
             ),
             Button("Connect", id="connect_btn", variant="primary"),
@@ -59,7 +57,7 @@ class ConnectionManager(Screen):
             select.clear()
 
     async def refresh_identities(self, select_pk: str = None):
-        self.identities = await get_all_identities()
+        self.identities = get_all_identities_sync()
         options = [(i.name, i.private_key) for i in self.identities]
         select = self.query_one("#identity_select")
         select.set_options(options)
@@ -70,60 +68,12 @@ class ConnectionManager(Screen):
             select.value = options[0][1]
         else:
             select.clear()
-        
-        # 1. Disable buttons if no credential is selected
-        has_selection = not select.is_blank()
-        self.query_one("#rename_identity_btn").disabled = not has_selection
-        self.query_one("#delete_identity_btn").disabled = not has_selection
 
-    @on(Select.Changed, "#identity_select")
-    def on_identity_change(self, event: Select.Changed):
-        has_selection = not self.query_one("#identity_select").is_blank()
-        self.query_one("#rename_identity_btn").disabled = not has_selection
-        self.query_one("#delete_identity_btn").disabled = not has_selection
-
-    @on(Button.Pressed, "#new_identity_btn")
-    def new_identity(self):
-        def after_create(result):
-            if result:
-                self.run_worker(self.refresh_identities(select_pk=result))
-        self.app.push_screen(NewIdentityModal(), after_create)
-
-    @on(Button.Pressed, "#rename_identity_btn")
-    async def rename_identity(self):
-        pk = self.query_one("#identity_select").value
-        if not pk:
-            self.notify("No identity selected", severity="error")
-            return
-        
-        identity = next(i for i in self.identities if i.private_key == pk)
-        
-        def do_rename(new_name):
-            if new_name:
-                async def run_rename():
-                    await update_identity_name(pk, new_name)
-                    await self.refresh_identities(select_pk=pk)
-                    self.notify(f"Identity renamed to {new_name}")
-                self.run_worker(run_rename())
-
-        self.app.push_screen(EditNameModal(identity.name), do_rename)
-
-    @on(Button.Pressed, "#delete_identity_btn")
-    async def confirm_delete(self):
-        pk = self.query_one("#identity_select").value
-        if not pk:
-            self.notify("No identity selected", severity="error")
-            return
-
-        def do_delete(confirmed):
-            if confirmed:
-                async def run_delete():
-                    await delete_identity(pk)
-                    await self.refresh_identities()
-                    self.notify("Identity deleted")
-                self.run_worker(run_delete())
-
-        self.app.push_screen(ConfirmModal("Are you sure you want to delete this identity?"), do_delete)
+    @on(Button.Pressed, "#manage_identities_btn")
+    def manage_identities(self):
+        async def after_manage(result):
+            await self.refresh_identities()
+        self.app.push_screen(IdentityManager(), after_manage)
 
     @on(Button.Pressed, "#manage_servers_btn")
     def manage_servers(self):
@@ -301,6 +251,88 @@ class ServerManager(Screen):
                 
         self.app.push_screen(ConfirmModal("Are you sure you want to delete this server?"), do_delete)
 
+class IdentityManager(Screen):
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Label("Identity Manager", id="screen_title")
+        yield DataTable(id="identity_table")
+        yield Horizontal(
+            Button("Back", id="back_btn"),
+            Button("New Identity", id="new_identity_btn"),
+            Button("Rename", id="rename_identity_btn", disabled=True),
+            Button("Delete", id="delete_identity_btn", variant="error", disabled=True),
+            classes="button-bar"
+        )
+        yield Footer()
+
+    async def on_mount(self) -> None:
+        table = self.query_one("#identity_table")
+        table.add_columns("Name", "Public Key (partial)")
+        table.cursor_type = "row"
+        self.load_table()
+
+    def load_table(self):
+        self.identities = get_all_identities_sync()
+        table = self.query_one("#identity_table")
+        table.clear()
+        for i in self.identities:
+            table.add_row(i.name, i.private_key[:16] + "...", key=i.private_key)
+            
+        has_rows = len(table.rows) > 0
+        if not has_rows:
+            self.query_one("#rename_identity_btn").disabled = True
+            self.query_one("#delete_identity_btn").disabled = True
+
+    @on(DataTable.RowSelected, "#identity_table")
+    def on_row_selected(self, event: DataTable.RowSelected):
+        self.query_one("#rename_identity_btn").disabled = False
+        self.query_one("#delete_identity_btn").disabled = False
+
+    @on(Button.Pressed, "#back_btn")
+    def back(self):
+        self.dismiss(True)
+
+    @on(Button.Pressed, "#new_identity_btn")
+    def new_identity(self):
+        def after_create(result):
+            if result:
+                self.load_table()
+        self.app.push_screen(NewIdentityModal(), after_create)
+
+    @on(Button.Pressed, "#rename_identity_btn")
+    def rename_identity(self):
+        table = self.query_one("#identity_table")
+        if table.cursor_row is None:
+            return
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        pk = row_key.value
+        
+        identity = next(i for i in self.identities if i.private_key == pk)
+        
+        def do_rename(new_name):
+            if new_name:
+                update_identity_name_sync(pk, new_name)
+                self.load_table()
+                self.notify(f"Identity renamed to {new_name}")
+
+        self.app.push_screen(EditNameModal(identity.name), do_rename)
+
+    @on(Button.Pressed, "#delete_identity_btn")
+    def confirm_delete(self):
+        table = self.query_one("#identity_table")
+        if table.cursor_row is None:
+            return
+        row_key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key
+        pk = row_key.value
+
+        def do_delete(confirmed):
+            if confirmed:
+                delete_identity_sync(pk)
+                self.load_table()
+                self.notify("Identity deleted")
+
+        self.app.push_screen(ConfirmModal("Are you sure you want to delete this identity?"), do_delete)
+
 class NewIdentityModal(ModalScreen):
     def compose(self) -> ComposeResult:
         yield Vertical(
@@ -318,17 +350,17 @@ class NewIdentityModal(ModalScreen):
         self.dismiss()
 
     @on(Button.Pressed, "#create")
-    async def create(self):
+    def create(self):
         name = self.query_one("#nickname").value
         if not name:
             self.notify("Name required.", severity="error")
             return
 
-        identity = generate_identity(name)
-        await add_identity(identity.name, identity.private_key, identity.public_key)
+        priv, pub = generate_identity()
+        add_identity_sync(name, priv, pub)
         self.notify(f"Identity '{name}' created!")
 
-        self.dismiss(identity.private_key)
+        self.dismiss(priv)
 
 class EditNameModal(ModalScreen):
     def __init__(self, current_name: str):
@@ -417,11 +449,16 @@ class BoardList(Screen):
         yield Label("Boards", id="screen_title")
         yield DataTable(id="board_table")
         yield Horizontal(
+            Button("Disconnect", id="disconnect_btn", variant="error"),
             Button("Refresh", id="refresh_btn"),
             Button("New Board", id="new_board_btn", classes="hidden" if self.app.client.role != "admin" else ""),
             classes="button-bar"
         )
         yield Footer()
+
+    @on(Button.Pressed, "#disconnect_btn")
+    def disconnect(self):
+        self.app.pop_screen() # Should go back to connection manager if it was pushed
 
     async def on_mount(self) -> None:
         # Update header with role
@@ -881,7 +918,10 @@ class BBSApp(App):
     .thread_border_3 { border-left: solid $warning; }
     .thread_border_4 { border-left: solid $error; }
     .thread_border_5 { border-left: solid $accent; }
-    #board_table, #thread_table {
+    #board_table, #thread_table, #server_table, #identity_table {
+        height: 1fr;
+    }
+    DataTable {
         height: 1fr;
     }
     #posts_container {
@@ -900,7 +940,6 @@ class BBSApp(App):
     }
 
     def on_mount(self):
-        init_db()
         self.push_screen("connection")
 
 def run():

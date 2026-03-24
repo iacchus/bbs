@@ -527,21 +527,23 @@ class BoardListItem(ListItem):
         yield Horizontal(
             Label(self.board_name, classes="list_col_name"),
             Label(self.description, classes="list_col_desc"),
-            classes="list_item_layout"
+            classes="board_list_layout"
         )
 
 class ThreadListItem(ListItem):
-    def __init__(self, thread_id: int, title: str, author: str):
+    def __init__(self, thread_id: int, title: str, author: str, date: str = ""):
         super().__init__()
         self.thread_id = thread_id
         self.title_str = title
         self.author = author
+        self.date_str = date
 
     def compose(self) -> ComposeResult:
         yield Horizontal(
             Label(self.title_str, classes="list_col_title"),
             Label(self.author, classes="list_col_author"),
-            classes="list_item_layout"
+            Label(self.date_str, classes="list_col_date"),
+            classes="thread_list_layout"
         )
 
 class BoardList(Screen):
@@ -551,7 +553,7 @@ class BoardList(Screen):
         yield Horizontal(
             Label("Name", classes="list_col_name list_header_text"),
             Label("Description", classes="list_col_desc list_header_text"),
-            classes="list_item_layout list_header_row"
+            classes="board_list_layout list_header_row"
         )
         yield VimListView(id="board_list")
         yield Horizontal(
@@ -617,7 +619,8 @@ class ThreadList(Screen):
         yield Horizontal(
             Label("Title", classes="list_col_title list_header_text"),
             Label("Author", classes="list_col_author list_header_text"),
-            classes="list_item_layout list_header_row"
+            Label("Date", classes="list_col_date list_header_text"),
+            classes="thread_list_layout list_header_row"
         )
         yield VimListView(id="thread_list")
         yield Horizontal(
@@ -643,7 +646,18 @@ class ThreadList(Screen):
             threads = await self.app.client.get_threads(self.board_id)
             for thread in threads:
                 author_display = thread.get("author_username") or thread["author_pubkey"][:10]+"..."
-                list_view.append(ThreadListItem(thread["id"], thread["title"], author_display))
+                
+                created_at_str = thread.get("created_at")
+                timestamp_str = ""
+                if created_at_str:
+                    try:
+                        import datetime
+                        dt = datetime.datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                        timestamp_str = dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                    except Exception:
+                        pass
+                
+                list_view.append(ThreadListItem(thread["id"], thread["title"], author_display, timestamp_str))
         except Exception as e:
             self.notify(f"Error loading threads: {e}", severity="error")
 
@@ -979,10 +993,19 @@ class BBSApp(App):
         align: center top;
     }
 
-    .list_item_layout {
+    .board_list_layout {
         layout: grid;
         grid-size: 2;
         grid-columns: 1fr 2fr;
+        padding: 1;
+        width: 100%;
+        height: auto;
+    }
+
+    .thread_list_layout {
+        layout: grid;
+        grid-size: 3;
+        grid-columns: 3fr 2fr 3fr;
         padding: 1;
         width: 100%;
         height: auto;
@@ -993,7 +1016,7 @@ class BBSApp(App):
         color: $accent;
     }
 
-    .list_col_desc, .list_col_author {
+    .list_col_desc, .list_col_author, .list_col_date {
         color: $text-muted;
     }
 

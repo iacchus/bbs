@@ -673,7 +673,7 @@ class ThreadList(Screen):
         thread_id = event.item.thread_id
         self.app.push_screen(ThreadView(thread_id=thread_id))
 
-class PostItem(Vertical):
+class BasePostItem(Vertical):
     can_focus = True
     
     BINDINGS = [
@@ -685,32 +685,14 @@ class PostItem(Vertical):
         Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
-    def __init__(self, pid: int, author: str, content: str, is_op: bool, children_count: int = 0, timestamp: str = "", **kwargs):
+    def __init__(self, pid: int, author: str, content: str, children_count: int = 0, timestamp: str = "", **kwargs):
         super().__init__(**kwargs)
         self.pid = pid
         self.author = author
         self.post_content = content
-        self.is_op = is_op
         self.children_count = children_count
         self.timestamp = timestamp
         self.is_collapsed = False
-
-    def compose(self) -> ComposeResult:
-        time_str = f" @ {self.timestamp}" if self.timestamp else ""
-        yield Label(f"#{self.pid} by {self.author}{' (OP)' if self.is_op else ''}{time_str}", classes="post_header")
-        yield Static(self.post_content, classes="post_content")
-        
-        expand_btn = Button(f" expand {self.children_count} replies ", id=f"expand_{self.pid}", classes="expand_btn hidden")
-        expand_btn.can_focus = False
-        reply_btn = Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
-        reply_btn.can_focus = False
-        
-        yield Horizontal(
-            expand_btn,
-            Static(classes="reply_spacer"),
-            reply_btn,
-            classes="reply_container"
-        )
 
     def on_focus(self, event: events.Focus):
         def do_scroll():
@@ -719,7 +701,6 @@ class PostItem(Vertical):
                 container.scroll_to_center(self)
             except Exception:
                 pass
-        # Small delay to let the layout recalculate after display changes
         self.set_timer(0.05, do_scroll)
 
     @on(Button.Pressed)
@@ -728,7 +709,7 @@ class PostItem(Vertical):
             self.action_toggle_collapse()
 
     async def on_click(self, event: events.Click):
-        if isinstance(event.widget, Label) and event.widget.has_class("post_header"):
+        if event.widget.has_class("post_header") or event.widget.parent and event.widget.parent.has_class("post_header"):
             self.action_toggle_collapse()
 
     def action_toggle_collapse(self):
@@ -736,13 +717,21 @@ class PostItem(Vertical):
         if branch and branch.has_class("thread_branch"):
             try:
                 self.is_collapsed = not self.is_collapsed
-                # toggle display of all children inside the branch except the first widget (which is this post)
+                
+                # Toggle content display
+                try:
+                    content_widget = self.query_one(".post_content")
+                    content_widget.display = not self.is_collapsed
+                except:
+                    pass
+
+                # Toggle children display
                 for child in branch.children:
                     if child != self:
                         child.display = not self.is_collapsed
                         
                 expand_btn = self.query_one(f"#expand_{self.pid}", Button)
-                if self.is_collapsed and self.children_count > 0:
+                if self.is_collapsed:
                     expand_btn.remove_class("hidden")
                     self.add_class("collapsed")
                 else:
@@ -758,7 +747,7 @@ class PostItem(Vertical):
             pass
 
     def action_focus_next(self):
-        posts = list(self.screen.query("PostItem"))
+        posts = list(self.screen.query("BasePostItem"))
         try:
             idx = posts.index(self)
             if idx + 1 < len(posts):
@@ -767,13 +756,57 @@ class PostItem(Vertical):
             pass
 
     def action_focus_previous(self):
-        posts = list(self.screen.query("PostItem"))
+        posts = list(self.screen.query("BasePostItem"))
         try:
             idx = posts.index(self)
             if idx - 1 >= 0:
                 posts[idx - 1].focus()
         except ValueError:
             pass
+
+
+class OPPostItem(BasePostItem):
+    def compose(self) -> ComposeResult:
+        with Horizontal(classes="post_header"):
+            yield Label(f"#{self.pid} ", classes="post_id")
+            yield Label(f"by {self.author} ", classes="post_author")
+            yield Label("(OP) ", classes="post_op_label")
+            if self.timestamp:
+                yield Label(f"@ {self.timestamp}", classes="post_date")
+            yield Static(classes="header_spacer")
+        
+        yield Static(self.post_content, classes="post_content")
+        
+        expand_btn = Button(f" Expand ", id=f"expand_{self.pid}", classes="expand_btn hidden")
+        expand_btn.can_focus = False
+        reply_btn = Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
+        reply_btn.can_focus = False
+        
+        with Horizontal(classes="reply_container"):
+            yield expand_btn
+            yield Static(classes="reply_spacer")
+            yield reply_btn
+
+class ReplyPostItem(BasePostItem):
+    def compose(self) -> ComposeResult:
+        with Horizontal(classes="post_header"):
+            yield Label(f"#{self.pid} ", classes="post_id")
+            yield Label(f"by {self.author} ", classes="post_author")
+            if self.timestamp:
+                yield Label(f"@ {self.timestamp}", classes="post_date")
+            yield Static(classes="header_spacer")
+        
+        yield Static(self.post_content, classes="post_content")
+        
+        expand_btn = Button(f" Expand ", id=f"expand_{self.pid}", classes="expand_btn hidden")
+        expand_btn.can_focus = False
+        reply_btn = Button("Reply", id=f"reply_{self.pid}", classes="reply_small_btn")
+        reply_btn.can_focus = False
+        
+        with Horizontal(classes="reply_container"):
+            yield expand_btn
+            yield Static(classes="reply_spacer")
+            yield reply_btn
 
 class ThreadView(Screen):
     BINDINGS = [
@@ -782,7 +815,7 @@ class ThreadView(Screen):
     ]
 
     def action_focus_first_post(self):
-        posts = list(self.query("PostItem"))
+        posts = list(self.query("BasePostItem"))
         if posts:
             posts[0].focus()
 
@@ -862,7 +895,10 @@ class ThreadView(Screen):
                         pass
 
                 # The actual post content
-                post_widget = PostItem(pid=pid, author=author, content=content, is_op=is_op, children_count=children_count, timestamp=timestamp_str, classes="post_item")
+                if is_op:
+                    post_widget = OPPostItem(pid=pid, author=author, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
+                else:
+                    post_widget = ReplyPostItem(pid=pid, author=author, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
 
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
@@ -1066,6 +1102,16 @@ class BBSApp(App):
         background: $primary;
         color: $text;
         padding: 0 1;
+        height: auto;
+    }
+    .header_spacer {
+        width: 1fr;
+    }
+    .post_author {
+        text-style: bold;
+    }
+    .post_date {
+        color: $text-muted;
     }
     .post_content {
         padding: 1;
@@ -1106,12 +1152,12 @@ class BBSApp(App):
     .bottom_separator {
         border-bottom: solid $primary 30%;
     }
-    .thread_border_0 { border-left: solid $primary; }
-    .thread_border_1 { border-left: solid $secondary; }
-    .thread_border_2 { border-left: solid $success; }
-    .thread_border_3 { border-left: solid $warning; }
-    .thread_border_4 { border-left: solid $error; }
-    .thread_border_5 { border-left: solid $accent; }
+    .thread_border_0 { border-left: solid #1ABC9C; }
+    .thread_border_1 { border-left: solid #E74C3C; }
+    .thread_border_2 { border-left: solid #F1C40F; }
+    .thread_border_3 { border-left: solid #9B59B6; }
+    .thread_border_4 { border-left: solid #2ECC71; }
+    .thread_border_5 { border-left: solid #E67E22; }
     #board_table, #thread_table, #server_table, #identity_table {
         height: 1fr;
     }

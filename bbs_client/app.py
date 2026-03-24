@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal, VerticalScroll
-from textual.widgets import Header, Footer, Input, Button, Label, Select, DataTable, Static, TextArea, Tree
+from textual.widgets import Header, Footer, Input, Button, Label, Select, DataTable, Static, TextArea, Tree, ListView, ListItem
 from textual.screen import Screen, ModalScreen
 from textual import on, work, events
 from textual.binding import Binding
@@ -14,6 +14,12 @@ from .servers import load_servers, save_servers
 import uuid
 
 class VimDataTable(DataTable):
+    BINDINGS = [
+        Binding("j", "cursor_down", "Down", show=False),
+        Binding("k", "cursor_up", "Up", show=False),
+    ]
+
+class VimListView(ListView):
     BINDINGS = [
         Binding("j", "cursor_down", "Down", show=False),
         Binding("k", "cursor_up", "Up", show=False),
@@ -510,11 +516,39 @@ class ProfileScreen(Screen):
         except Exception as e:
             self.notify(f"Error updating profile: {e}", severity="error")
 
+class BoardListItem(ListItem):
+    def __init__(self, board_id: int, name: str, description: str):
+        super().__init__()
+        self.board_id = board_id
+        self.board_name = name
+        self.description = description
+
+    def compose(self) -> ComposeResult:
+        yield Horizontal(
+            Label(self.board_name, classes="list_col_name"),
+            Label(self.description, classes="list_col_desc"),
+            classes="list_item_layout"
+        )
+
+class ThreadListItem(ListItem):
+    def __init__(self, thread_id: int, title: str, author: str):
+        super().__init__()
+        self.thread_id = thread_id
+        self.title_str = title
+        self.author = author
+
+    def compose(self) -> ComposeResult:
+        yield Horizontal(
+            Label(self.title_str, classes="list_col_title"),
+            Label(self.author, classes="list_col_author"),
+            classes="list_item_layout"
+        )
+
 class BoardList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Boards", id="screen_title")
-        yield VimDataTable(id="board_table")
+        yield VimListView(id="board_list")
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
             Button("Profile", id="profile_btn"),
@@ -540,19 +574,16 @@ class BoardList(Screen):
             self.title = f"BBS - {self.app.client.identity.name}"
             self.sub_title = f"Role: {self.app.client.role}"
         
-        table = self.query_one("#board_table")
-        table.add_columns("Name", "Description")
-        table.cursor_type = "row"
         await self.load_boards()
 
     @on(Button.Pressed, "#refresh_btn")
     async def load_boards(self):
-        table = self.query_one("#board_table")
-        table.clear()
+        list_view = self.query_one("#board_list")
+        list_view.clear()
         try:
             boards = await self.app.client.get_boards()
             for board in boards:
-                table.add_row(board["name"], board["description"], key=str(board["id"]))
+                list_view.append(BoardListItem(board["id"], board["name"], board["description"]))
         except Exception as e:
             self.notify(f"Error loading boards: {e}", severity="error")
 
@@ -564,9 +595,9 @@ class BoardList(Screen):
 
         self.app.push_screen(NewBoardModal(), after_submit)
 
-    @on(VimDataTable.RowSelected)
-    def on_row_selected(self, event: VimDataTable.RowSelected):
-        board_id = int(event.row_key.value)
+    @on(ListView.Selected, "#board_list")
+    def on_list_selected(self, event: ListView.Selected):
+        board_id = event.item.board_id
         self.app.push_screen(ThreadList(board_id=board_id))
 
 
@@ -578,7 +609,7 @@ class ThreadList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(f"Board {self.board_id}", id="screen_title")
-        yield VimDataTable(id="thread_table")
+        yield VimListView(id="thread_list")
         yield Horizontal(
             Button("Back", id="back_btn"),
             Button("Refresh", id="refresh_btn"),
@@ -588,9 +619,6 @@ class ThreadList(Screen):
         yield Footer()
 
     async def on_mount(self) -> None:
-        table = self.query_one("#thread_table")
-        table.add_columns("Title", "Author")
-        table.cursor_type = "row"
         await self.load_threads()
 
     @on(Button.Pressed, "#back_btn")
@@ -599,13 +627,13 @@ class ThreadList(Screen):
 
     @on(Button.Pressed, "#refresh_btn")
     async def load_threads(self):
-        table = self.query_one("#thread_table")
-        table.clear()
+        list_view = self.query_one("#thread_list")
+        list_view.clear()
         try:
             threads = await self.app.client.get_threads(self.board_id)
             for thread in threads:
                 author_display = thread.get("author_username") or thread["author_pubkey"][:10]+"..."
-                table.add_row(thread["title"], author_display, key=str(thread["id"]))
+                list_view.append(ThreadListItem(thread["id"], thread["title"], author_display))
         except Exception as e:
             self.notify(f"Error loading threads: {e}", severity="error")
 
@@ -616,9 +644,9 @@ class ThreadList(Screen):
                 self.run_worker(self.load_threads())
         self.app.push_screen(ComposeModal(board_id=self.board_id), after_submit)
 
-    @on(VimDataTable.RowSelected)
-    def on_row_selected(self, event: VimDataTable.RowSelected):
-        thread_id = int(event.row_key.value)
+    @on(ListView.Selected, "#thread_list")
+    def on_list_selected(self, event: ListView.Selected):
+        thread_id = event.item.thread_id
         self.app.push_screen(ThreadView(thread_id=thread_id))
 
 class PostItem(Vertical):
@@ -940,6 +968,25 @@ class BBSApp(App):
     ConnectionManager, NewIdentityModal, ComposeModal, NewBoardModal, EditNameModal, ConfirmModal, ServerManager, ServerModal {
         align: center top;
     }
+
+    .list_item_layout {
+        layout: grid;
+        grid-size: 2;
+        grid-columns: 1fr 2fr;
+        padding: 1;
+        width: 100%;
+        height: auto;
+    }
+
+    .list_col_name, .list_col_title {
+        text-style: bold;
+        color: $accent;
+    }
+
+    .list_col_desc, .list_col_author {
+        color: $text-muted;
+    }
+
 
     #connection_form {
         padding: 2;

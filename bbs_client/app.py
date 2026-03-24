@@ -983,7 +983,7 @@ class BBSApp(App):
         layout: grid;
         grid-size: 2;
         grid-columns: 1fr 2fr;
-        padding: 0 1;
+        padding: 1;
         width: 100%;
         height: auto;
     }

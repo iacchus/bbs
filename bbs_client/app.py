@@ -548,6 +548,11 @@ class BoardList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Boards", id="screen_title")
+        yield Horizontal(
+            Label("Name", classes="list_col_name list_header_text"),
+            Label("Description", classes="list_col_desc list_header_text"),
+            classes="list_item_layout list_header_row"
+        )
         yield VimListView(id="board_list")
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
@@ -609,6 +614,11 @@ class ThreadList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label(f"Board {self.board_id}", id="screen_title")
+        yield Horizontal(
+            Label("Title", classes="list_col_title list_header_text"),
+            Label("Author", classes="list_col_author list_header_text"),
+            classes="list_item_layout list_header_row"
+        )
         yield VimListView(id="thread_list")
         yield Horizontal(
             Button("Back", id="back_btn"),
@@ -985,6 +995,18 @@ class BBSApp(App):
 
     .list_col_desc, .list_col_author {
         color: $text-muted;
+    }
+
+    .list_header_row {
+        height: 1;
+        padding-bottom: 0;
+        margin-bottom: 1;
+        border-bottom: solid $primary;
+    }
+
+    .list_header_text {
+        text-style: bold;
+        color: $text;
     }
 
 

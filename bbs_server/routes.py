@@ -31,6 +31,9 @@ class CreateBoardPayload(BaseModel):
 
 # Controllers
 
+class UpdateProfilePayload(BaseModel):
+    username: str | None = None
+
 class UserController(Controller):
     path = "/user"
 
@@ -84,12 +87,56 @@ class UserController(Controller):
         )
 
     @get("/me")
-    async def user_profile(self, request: Request) -> dict[str, Any]:
+    async def get_me(self, request: Request) -> dict[str, Any]:
         if not request.user:
             raise NotAuthorizedException()
+        user = await User.objects().get(User.public_key == request.user.public_key).run()
         return {
-            "my_public_key": request.user.public_key,
-            "role": request.user.role
+            "public_key": user.public_key,
+            "role": user.role,
+            "username": user.username
+        }
+
+    @get("/{public_key:str}")
+    async def get_user_profile(self, public_key: str) -> dict[str, Any]:
+        user = await User.objects().get(User.public_key == public_key).run()
+        if not user:
+            raise NotFoundException("User not found")
+        return {
+            "public_key": user.public_key,
+            "role": user.role,
+            "username": user.username
+        }
+
+    @post("/me")
+    async def update_profile(self, data: UpdateProfilePayload, request: Request) -> dict[str, Any]:
+        if not request.user:
+            raise NotAuthorizedException()
+        
+        user = await User.objects().get(User.public_key == request.user.public_key).run()
+        if not user:
+            raise NotFoundException("User not found")
+
+        if data.username is not None:
+            import re
+            if data.username != "" and not re.match(r'^[a-zA-Z0-9\-_]+$', data.username):
+                raise HTTPException(detail="Username can only contain ASCII alphanumeric characters, hyphens, and underscores.", status_code=400)
+            
+            if data.username == "":
+                user.username = None
+            else:
+                # Check if username is taken by someone else
+                existing = await User.objects().get(User.username == data.username).run()
+                if existing and existing.public_key != user.public_key:
+                    raise HTTPException(detail="Username is already taken.", status_code=409)
+                
+                user.username = data.username
+        
+        await user.save().run()
+        return {
+            "public_key": user.public_key,
+            "role": user.role,
+            "username": user.username
         }
 
 class BoardController(Controller):
@@ -124,7 +171,10 @@ class BoardController(Controller):
              raise NotFoundException("Board not found")
 
         offset = (page - 1) * limit
-        threads = await Post.select().where(
+        threads = await Post.select(
+            Post.all_columns(),
+            Post.author_pubkey.username.as_alias("author_username")
+        ).where(
             (Post.board_id == board_id) & (Post.reply_to_id.is_null())
         ).order_by(Post.created_at, ascending=False).limit(limit).offset(offset).run()
         return threads
@@ -173,7 +223,11 @@ class ThreadController(Controller):
             raise NotFoundException("Thread not found")
 
         # Recursive query to fetch entire thread tree (no pagination for now)
-        query = "WITH RECURSIVE thread_posts AS ( SELECT * FROM post WHERE id = {} UNION ALL SELECT p.* FROM post p JOIN thread_posts tp ON p.reply_to_id = tp.id ) SELECT * FROM thread_posts;".format(thread_id)
+        query = """WITH RECURSIVE thread_posts AS (
+            SELECT p.*, u.username as author_username FROM post p JOIN "user" u ON p.author_pubkey = u.public_key WHERE p.id = {}
+            UNION ALL
+            SELECT p.*, u.username as author_username FROM post p JOIN thread_posts tp ON p.reply_to_id = tp.id JOIN "user" u ON p.author_pubkey = u.public_key
+        ) SELECT * FROM thread_posts;""".format(thread_id)
 
         results = await Post.raw(query).run()
         return results

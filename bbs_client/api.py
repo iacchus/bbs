@@ -114,3 +114,21 @@ class BBSClient:
         resp = await self.client.post(f"/threads/{target_id}", json=payload)
         resp.raise_for_status()
         return resp.json()
+
+    async def get_profile(self, public_key: str = None) -> Dict[str, Any]:
+        """Fetch a user profile. If public_key is None, fetches the current user's profile."""
+        try:
+            path = f"/user/{public_key}" if public_key else "/user/me"
+            resp = await self.client.get(path)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            print(f"Failed to get profile: {e}")
+            return {}
+
+    async def update_profile(self, username: str) -> Dict[str, Any]:
+        """Update the current user's profile."""
+        payload = {"username": username}
+        resp = await self.client.post("/user/me", json=payload)
+        resp.raise_for_status()
+        return resp.json()

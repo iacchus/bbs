@@ -449,6 +449,67 @@ class NewBoardModal(ModalScreen):
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
 
+class ProfileScreen(Screen):
+    def __init__(self, public_key: str = None):
+        super().__init__()
+        self.public_key = public_key
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Vertical(
+            Label("User Profile", id="screen_title"),
+            Label("Public Key:"),
+            Input(value="", id="profile_pubkey", disabled=True),
+            Label("Role:"),
+            Input(value="", id="profile_role", disabled=True),
+            Label("Username:"),
+            Input(value="", id="profile_username", placeholder="Set a username (alphanumeric, hyphens, underscores)"),
+            Horizontal(
+                Button("Back", id="back_btn"),
+                Button("Save", id="save_btn", variant="primary", classes="hidden"),
+                classes="button-bar"
+            ),
+            id="profile_container"
+        )
+        yield Footer()
+
+    async def on_mount(self) -> None:
+        await self.load_profile()
+
+    async def load_profile(self):
+        try:
+            profile = await self.app.client.get_profile(self.public_key)
+            if profile:
+                self.query_one("#profile_pubkey").value = profile.get("public_key", "")
+                self.query_one("#profile_role").value = profile.get("role", "")
+                self.query_one("#profile_username").value = profile.get("username", "") or ""
+                
+                # Only allow editing if it's our own profile
+                # Assuming if self.public_key is None or matches our client identity, it's ours
+                is_own = not self.public_key or self.public_key == self.app.client.identity.public_key
+                
+                if is_own:
+                    self.query_one("#save_btn").remove_class("hidden")
+                else:
+                    self.query_one("#profile_username").disabled = True
+
+        except Exception as e:
+            self.notify(f"Error loading profile: {e}", severity="error")
+
+    @on(Button.Pressed, "#back_btn")
+    def back(self):
+        self.app.pop_screen()
+
+    @on(Button.Pressed, "#save_btn")
+    async def save_profile(self):
+        username = self.query_one("#profile_username").value.strip()
+        try:
+            await self.app.client.update_profile(username)
+            self.notify("Profile updated successfully!")
+            self.app.pop_screen()
+        except Exception as e:
+            self.notify(f"Error updating profile: {e}", severity="error")
+
 class BoardList(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
@@ -456,11 +517,16 @@ class BoardList(Screen):
         yield VimDataTable(id="board_table")
         yield Horizontal(
             Button("Disconnect", id="disconnect_btn", variant="error"),
+            Button("Profile", id="profile_btn"),
             Button("Refresh", id="refresh_btn"),
             Button("New Board", id="new_board_btn", classes="hidden" if self.app.client.role != "admin" else ""),
             classes="button-bar"
         )
         yield Footer()
+
+    @on(Button.Pressed, "#profile_btn")
+    def open_profile(self):
+        self.app.push_screen(ProfileScreen(public_key=None))
 
     @on(Button.Pressed, "#disconnect_btn")
     def disconnect(self):
@@ -538,9 +604,8 @@ class ThreadList(Screen):
         try:
             threads = await self.app.client.get_threads(self.board_id)
             for thread in threads:
-                # Assuming thread is a Post object (OP)
-                # It has title, author_pubkey
-                table.add_row(thread["title"], thread["author_pubkey"][:10]+"...", key=str(thread["id"]))
+                author_display = thread.get("author_username") or thread["author_pubkey"][:10]+"..."
+                table.add_row(thread["title"], author_display, key=str(thread["id"]))
         except Exception as e:
             self.notify(f"Error loading threads: {e}", severity="error")
 
@@ -729,7 +794,7 @@ class ThreadView(Screen):
             # 2. Recursive render function
             def render_post(post, depth=0):
                 content = post.get("content", "")
-                author = post.get("author_pubkey", "")[:8]
+                author = post.get("author_username") or post.get("author_pubkey", "")[:8]
                 pid = post.get("id")
                 is_op = (pid == self.thread_id)
                 children_count = get_total_children(pid)
@@ -740,7 +805,7 @@ class ThreadView(Screen):
                     try:
                         import datetime
                         dt = datetime.datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
-                        timestamp_str = str(int(dt.timestamp()))
+                        timestamp_str = dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
                     except Exception:
                         pass
 

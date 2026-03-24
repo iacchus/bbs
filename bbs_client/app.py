@@ -983,7 +983,7 @@ class BBSApp(App):
         layout: grid;
         grid-size: 2;
         grid-columns: 1fr 2fr;
-        padding: 1;
+        padding: 0 1;
         width: 100%;
         height: auto;
     }
@@ -998,9 +998,9 @@ class BBSApp(App):
     }
 
     .list_header_row {
-        height: 1;
-        padding-bottom: 0;
-        margin-bottom: 1;
+        height: auto;
+        padding-top: 1;
+        padding-bottom: 1;
         border-bottom: solid $primary;
     }
 

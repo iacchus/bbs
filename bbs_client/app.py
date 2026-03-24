@@ -768,7 +768,6 @@ class BasePostItem(Vertical):
 class OPPostItem(BasePostItem):
     def compose(self) -> ComposeResult:
         with Horizontal(classes="post_header"):
-            yield Label(f"#{self.pid} ", classes="post_id")
             yield Label(f"by {self.author} ", classes="post_author")
             yield Label("(OP) ", classes="post_op_label")
             if self.timestamp:
@@ -790,7 +789,6 @@ class OPPostItem(BasePostItem):
 class ReplyPostItem(BasePostItem):
     def compose(self) -> ComposeResult:
         with Horizontal(classes="post_header"):
-            yield Label(f"#{self.pid} ", classes="post_id")
             yield Label(f"by {self.author} ", classes="post_author")
             if self.timestamp:
                 yield Label(f"@ {self.timestamp}", classes="post_date")
@@ -862,6 +860,8 @@ class ThreadView(Screen):
             if not op:
                 self.notify("Thread not found.", severity="error")
                 return
+
+            self.query_one("#screen_title", Label).update(op.get("title", "Thread View"))
 
             # 1. Build a parent -> children map
             children_map = {}

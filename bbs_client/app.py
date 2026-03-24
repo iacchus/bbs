@@ -1166,7 +1166,7 @@ class BBSApp(App):
     }
     #posts_container {
         height: 1fr;
-        padding: 1 2;
+        padding: 1 0;
     }
     .button-bar {
         height: 3;

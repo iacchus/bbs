@@ -685,10 +685,11 @@ class BasePostItem(Vertical):
         Binding("k", "focus_previous", "Previous (vim)", show=False),
     ]
 
-    def __init__(self, pid: int, author: str, content: str, children_count: int = 0, timestamp: str = "", **kwargs):
+    def __init__(self, pid: int, author: str, content: str, children_count: int = 0, timestamp: str = "", author_pubkey: str = "", **kwargs):
         super().__init__(**kwargs)
         self.pid = pid
         self.author = author
+        self.author_pubkey = author_pubkey
         self.post_content = content
         self.children_count = children_count
         self.timestamp = timestamp
@@ -709,7 +710,9 @@ class BasePostItem(Vertical):
             self.action_toggle_collapse()
 
     async def on_click(self, event: events.Click):
-        if event.widget.has_class("post_header") or event.widget.parent and event.widget.parent.has_class("post_header"):
+        if event.widget.has_class("post_author"):
+            self.app.push_screen(ProfileScreen(public_key=self.author_pubkey))
+        elif event.widget.has_class("post_header") or event.widget.parent and event.widget.parent.has_class("post_header"):
             self.action_toggle_collapse()
 
     def action_toggle_collapse(self):
@@ -880,10 +883,11 @@ class ThreadView(Screen):
             def render_post(post, depth=0):
                 content = post.get("content", "")
                 author = post.get("author_username") or post.get("author_pubkey", "")[:8]
+                author_pubkey = post.get("author_pubkey", "")
                 pid = post.get("id")
                 is_op = (pid == self.thread_id)
                 children_count = get_total_children(pid)
-                
+
                 created_at_str = post.get("created_at")
                 timestamp_str = ""
                 if created_at_str:
@@ -896,10 +900,9 @@ class ThreadView(Screen):
 
                 # The actual post content
                 if is_op:
-                    post_widget = OPPostItem(pid=pid, author=author, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
+                    post_widget = OPPostItem(pid=pid, author=author, author_pubkey=author_pubkey, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
                 else:
-                    post_widget = ReplyPostItem(pid=pid, author=author, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
-
+                    post_widget = ReplyPostItem(pid=pid, author=author, author_pubkey=author_pubkey, content=content, children_count=children_count, timestamp=timestamp_str, classes="post_item")
                 if depth == 0:
                     # Separate OP from its replies with a thin bottom border
                     post_widget.add_class("bottom_separator")
